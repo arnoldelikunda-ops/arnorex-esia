@@ -1,30 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <head>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDhI8wSYTvl-BpgoWclUs5fz6c8Lxqyfww",
-            authDomain: "arnorex-esia-pro.firebaseapp.com",
-            projectId: "arnorex-esia-pro",
-            storageBucket: "arnorex-esia-pro.firebasestorage.app",
-            messagingSenderId: "372225941309",
-            appId: "1:372225941309:web:5b03df354f70babd9a6f54"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        window.db = getFirestore(app);
-        window.auth = getAuth(app);
-        window.currentProjectId = null; // This is the 'Mirror Killer'
-        
-        console.log("Arnorex Cloud Ready 🦾");
-    </script>
-</head>
-
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Arnorex ESIA Pro</title>
@@ -32,6 +8,68 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,600;9..144,700;9..144,800&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" crossorigin/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.umd.min.js" crossorigin="anonymous"></script>
+<!-- ══ FIREBASE SDK ══ -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import {
+    getFirestore, doc, setDoc, getDoc, getDocs,
+    collection, deleteDoc, serverTimestamp, query, orderBy
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import {
+    getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+    createUserWithEmailAndPassword, signOut, sendPasswordResetEmail,
+    updateProfile
+  } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDhI8wSYTvl-BpgoWclUs5fz6c8Lxqyfww",
+    authDomain: "arnorex-esia-pro.firebaseapp.com",
+    projectId: "arnorex-esia-pro",
+    storageBucket: "arnorex-esia-pro.firebasestorage.app",
+    messagingSenderId: "372225941309",
+    appId: "1:372225941309:web:5b03df354f70babd9a6f54"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const auth = getAuth(app);
+
+  // ── MIRROR KILLER: unique ID per project, never reuse ──
+  window.currentProjectId = null;
+
+  // ── Expose Firebase methods globally for non-module script ──
+  window._fb = {
+    db, auth,
+    doc, setDoc, getDoc, getDocs, collection,
+    deleteDoc, serverTimestamp, query, orderBy,
+    signInWithEmailAndPassword, createUserWithEmailAndPassword,
+    signOut, sendPasswordResetEmail, updateProfile
+  };
+
+  // ── Auth state listener — runs before anything else ──
+  onAuthStateChanged(auth, function(user) {
+    if (user) {
+      window._currentUser = user;
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('app-root').style.display = 'flex';
+      // Update UI with user info
+      var nameEl = document.getElementById('sb-user-name');
+      var emailEl = document.getElementById('sb-user-email');
+      var avatarEl = document.getElementById('sb-avatar');
+      if (nameEl) nameEl.textContent = user.displayName || user.email.split('@')[0];
+      if (emailEl) emailEl.textContent = user.email;
+      if (avatarEl) avatarEl.textContent = (user.displayName || user.email)[0].toUpperCase();
+      // Load user's projects from Firestore
+      if (window._appReady) window.loadUserProjects();
+    } else {
+      window._currentUser = null;
+      document.getElementById('auth-screen').style.display = 'flex';
+      document.getElementById('app-root').style.display = 'none';
+    }
+  });
+
+  console.log('Arnorex Cloud Ready 🦾');
+</script>
 <style>
 /* ══════════════════════════════════════════
    ARNOREX ESIA PRO v5 — PREMIUM SaaS DESIGN
@@ -373,6 +411,50 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
   table.t td input,table.t td select{border:none;background:transparent;}
 }
 
+/* ─── AUTH SCREEN ─── */
+#auth-screen{
+  position:fixed;inset:0;background:var(--ink);z-index:999;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.auth-card{
+  background:var(--surface);border-radius:16px;padding:36px;
+  max-width:420px;width:100%;box-shadow:var(--shadow-lg);
+}
+.auth-logo{text-align:center;margin-bottom:28px;}
+.auth-logo-mark{font-family:'Fraunces',serif;font-size:22px;font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:8px;}
+.auth-logo-mark .dot{width:9px;height:9px;background:var(--cyan);border-radius:50%;}
+.auth-logo-sub{font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:4px;}
+.auth-tabs{display:flex;gap:0;background:var(--bg);border-radius:var(--radius-sm);padding:3px;margin-bottom:24px;}
+.auth-tab{flex:1;padding:8px;border:none;border-radius:6px;background:transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;}
+.auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);}
+.auth-form{display:flex;flex-direction:column;gap:14px;}
+.auth-form .field label{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.2px;}
+.auth-form .field input{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--ink);font-family:'Outfit',sans-serif;font-size:13.5px;width:100%;transition:.15s;}
+.auth-form .field input:focus{outline:none;border-color:var(--cyan);background:var(--surface);box-shadow:0 0 0 3px var(--cyan-dim);}
+.auth-submit{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);background:var(--ink);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px;}
+.auth-submit:hover{background:var(--ink2);}
+.auth-error{font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-sm);padding:10px 13px;display:none;}
+.auth-error.show{display:block;}
+.auth-footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted);}
+.auth-footer a{color:var(--cyan);cursor:pointer;font-weight:600;}
+.auth-divider{text-align:center;color:var(--muted);font-size:12px;margin:6px 0;position:relative;}
+.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border);}
+.auth-divider span{background:var(--surface);padding:0 10px;position:relative;}
+
+/* ─── APP ROOT WRAPPER ─── */
+#app-root{display:none;flex-direction:column;min-height:100vh;}
+
+/* ─── USER MENU IN SIDEBAR ─── */
+#sb-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--green));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.sb-signout{display:flex;align-items:center;gap:8px;padding:7px 20px;cursor:pointer;font-size:12px;color:rgba(255,255,255,.4);transition:.15s;margin-top:2px;}
+.sb-signout:hover{color:var(--red);background:rgba(239,68,68,.07);}
+
+/* ─── CLOUD SAVE INDICATOR ─── */
+.cloud-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle;}
+.cloud-saved{background:var(--green);}
+.cloud-saving{background:var(--amber);animation:pulse 1s infinite;}
+.cloud-error{background:var(--red);}
+
 /* ─── MICRO ANIMATIONS ─── */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .screen.active{animation:fadeIn .2s ease;}
@@ -381,6 +463,52 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
 </style>
 </head>
 <body>
+
+<!-- ═══ AUTH SCREEN ═══ -->
+<div id="auth-screen" style="display:flex">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-mark"><div class="dot"></div>Arnorex ESIA Pro</div>
+      <div class="auth-logo-sub">Professional Assessment Platform</div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+    <!-- LOGIN FORM -->
+    <div id="form-login" class="auth-form">
+      <div id="login-error" class="auth-error"></div>
+      <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
+      <button class="auth-submit" onclick="doLogin()">Sign In to Arnorex</button>
+      <div class="auth-divider"><span>or</span></div>
+      <div class="auth-footer"><a onclick="switchAuthTab('reset')">Forgot password?</a></div>
+    </div>
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" class="auth-form" style="display:none">
+      <div id="signup-error" class="auth-error"></div>
+      <div class="field"><label>Full Name</label><input type="text" id="signup-name" placeholder="Arnold Elikunda" autocomplete="name"/></div>
+      <div class="field"><label>Email Address</label><input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/></div>
+      <div class="field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min. 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"/></div>
+      <button class="auth-submit" onclick="doSignup()">Create Account</button>
+    </div>
+    <!-- RESET FORM -->
+    <div id="form-reset" class="auth-form" style="display:none">
+      <div id="reset-error" class="auth-error"></div>
+      <div id="reset-success" class="auth-error" style="background:var(--green-dim);border-color:rgba(16,185,129,.2);color:var(--green)"></div>
+      <div class="field"><label>Email Address</label><input type="email" id="reset-email" placeholder="you@example.com"/></div>
+      <button class="auth-submit" onclick="doReset()">Send Reset Email</button>
+      <div class="auth-footer"><a onclick="switchAuthTab('login')">← Back to sign in</a></div>
+    </div>
+    <div class="auth-footer" style="margin-top:20px;font-size:11px;color:var(--muted)">
+      By signing in you agree to use this tool responsibly for professional ESIA work.<br>
+      <strong style="color:var(--ink)">arnoldelikunda@gmail.com</strong> · +255 773 223 565
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ROOT (shown after login) ═══ -->
+<div id="app-root" style="display:none">
 
 <!-- ═══ SIDEBAR ═══ -->
 <nav id="sidebar">
@@ -415,12 +543,13 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
 
   <div class="sb-footer">
     <div class="sb-footer-inner">
-      <div class="sf-avatar">A</div>
+      <div id="sb-avatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--green));display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0">A</div>
       <div class="sf-info">
-        <div class="sf-name">Arnold Elikunda</div>
-        <div class="sf-role">arnoldelikunda@gmail.com</div>
+        <div class="sf-name" id="sb-user-name">Loading...</div>
+        <div class="sf-role" id="sb-user-email"></div>
       </div>
     </div>
+    <div class="sb-signout" onclick="doSignOut()">🚪 Sign Out</div>
   </div>
 </nav>
 
@@ -1239,23 +1368,29 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
 <!-- Toast -->
 <div id="toast"><span id="toast-ico">✓</span><span id="toast-msg">Saved</span></div>
 
+</div><!-- /#app-root -->
+
 <script>
 'use strict';
-// ══════════════════════════════════════════════════════
-//  ARNOREX ESIA PRO v5 — PREMIUM SaaS ENGINE
-//  Multi-project · Dashboard-first · Card modules
-//  Light theme · Working exports · Mobile-first
-// ══════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  ARNOREX ESIA PRO v6 — FIREBASE CLOUD BACKEND
+//  Auth: Email/Password · Firestore: per-user projects
+//  Mirror-Kill: window.currentProjectId per session
+//  No data bleed between projects or users
+// ══════════════════════════════════════════════════════════════
 
-var PROJECTS = [];    // Array of project objects
-var ACTIVE_PROJ = null;  // Currently open project index
-var DONE = {};        // {modId: true}
-var PROJ_TYPE = '';
-var SAVE_TIMER = null;
+// ── APP STATE ──
+var PROJECTS = [];       // Local cache of this user's projects
+var ACTIVE_PROJ = null;  // Index into PROJECTS array (local cache)
+var DONE = {};           // {modId: true} for current project
+var PROJ_TYPE = '';      // Project type string
+var SAVE_TIMER = null;   // Debounce timer
 var IS_MOB = window.innerWidth <= 768;
 var SB_OPEN = true;
 var REPORTS_GENERATED = 0;
+window._appReady = false; // Prevents load before auth
 
+// ── MODULE & SMART DATA (unchanged from v5) ──
 var MODS = [
   {id:'cover',       title:'Cover Page',               icon:'📋', color:'#0ea5e9,#38bdf8'},
   {id:'scoping',     title:'Scoping / TOR',             icon:'🔍', color:'#f59e0b,#fbbf24'},
@@ -1309,7 +1444,242 @@ var SMART = {
   'Other':['General construction disturbance','Land use change and displacement','Biodiversity habitat disturbance','Worker health and safety risk','Community consultation required','Employment opportunity (positive)']
 };
 
-// ── SIDEBAR ──
+// ══════════════════════════════════
+//  AUTH FUNCTIONS
+// ══════════════════════════════════
+
+function switchAuthTab(tab) {
+  ['login','signup','reset'].forEach(function(t) {
+    document.getElementById('form-'+t).style.display = t===tab ? 'flex' : 'none';
+  });
+  document.querySelectorAll('.auth-tab').forEach(function(el){ el.classList.remove('active'); });
+  var tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+  // Clear errors
+  document.querySelectorAll('.auth-error').forEach(function(el){ el.classList.remove('show'); el.textContent=''; });
+}
+
+function showAuthError(formId, msg) {
+  var el = document.getElementById(formId + '-error');
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+
+function doLogin() {
+  var email = document.getElementById('login-email').value.trim();
+  var pass  = document.getElementById('login-pass').value;
+  if (!email || !pass) { showAuthError('login','Please enter your email and password.'); return; }
+  var btn = document.querySelector('#form-login .auth-submit');
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  window._fb.signInWithEmailAndPassword(window._fb.auth, email, pass)
+    .then(function() {
+      btn.textContent = 'Sign In to Arnorex'; btn.disabled = false;
+    })
+    .catch(function(err) {
+      btn.textContent = 'Sign In to Arnorex'; btn.disabled = false;
+      var msg = err.code === 'auth/wrong-password' ? 'Incorrect password.' :
+                err.code === 'auth/user-not-found' ? 'No account found with this email.' :
+                err.code === 'auth/invalid-email' ? 'Invalid email address.' :
+                err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.' :
+                'Sign in failed: ' + err.message;
+      showAuthError('login', msg);
+    });
+}
+
+function doSignup() {
+  var name  = document.getElementById('signup-name').value.trim();
+  var email = document.getElementById('signup-email').value.trim();
+  var pass  = document.getElementById('signup-pass').value;
+  if (!name)  { showAuthError('signup','Please enter your full name.'); return; }
+  if (!email) { showAuthError('signup','Please enter your email address.'); return; }
+  if (pass.length < 6) { showAuthError('signup','Password must be at least 6 characters.'); return; }
+  var btn = document.querySelector('#form-signup .auth-submit');
+  btn.textContent = 'Creating account...'; btn.disabled = true;
+  window._fb.createUserWithEmailAndPassword(window._fb.auth, email, pass)
+    .then(function(cred) {
+      return window._fb.updateProfile(cred.user, { displayName: name });
+    })
+    .then(function() {
+      btn.textContent = 'Create Account'; btn.disabled = false;
+      // onAuthStateChanged will handle the rest
+    })
+    .catch(function(err) {
+      btn.textContent = 'Create Account'; btn.disabled = false;
+      var msg = err.code === 'auth/email-already-in-use' ? 'An account already exists with this email.' :
+                err.code === 'auth/invalid-email' ? 'Invalid email address.' :
+                err.code === 'auth/weak-password' ? 'Password is too weak.' :
+                'Sign up failed: ' + err.message;
+      showAuthError('signup', msg);
+    });
+}
+
+function doReset() {
+  var email = document.getElementById('reset-email').value.trim();
+  if (!email) { showAuthError('reset','Please enter your email address.'); return; }
+  window._fb.sendPasswordResetEmail(window._fb.auth, email)
+    .then(function() {
+      var succ = document.getElementById('reset-success');
+      succ.textContent = '✓ Reset email sent! Check your inbox.';
+      succ.classList.add('show');
+    })
+    .catch(function(err) { showAuthError('reset','Could not send reset email: ' + err.message); });
+}
+
+function doSignOut() {
+  if (!confirm('Sign out of Arnorex ESIA Pro?')) return;
+  // Clear local state on sign out
+  PROJECTS = []; ACTIVE_PROJ = null; DONE = {}; PROJ_TYPE = '';
+  window.currentProjectId = null;
+  window._fb.signOut(window._fb.auth).then(function() {
+    toast('Signed out. See you next time!');
+  });
+}
+
+// ══════════════════════════════════
+//  FIRESTORE — CLOUD SAVE / LOAD
+//  Mirror-Kill: every project gets its own Firestore document ID
+//  Path: users/{uid}/projects/{projectId}
+// ══════════════════════════════════
+
+function getUserProjectsRef() {
+  var uid = window._currentUser ? window._currentUser.uid : null;
+  if (!uid) return null;
+  return window._fb.collection(window._fb.db, 'users', uid, 'projects');
+}
+
+function getProjectDocRef(projectId) {
+  var uid = window._currentUser ? window._currentUser.uid : null;
+  if (!uid || !projectId) return null;
+  return window._fb.doc(window._fb.db, 'users', uid, 'projects', projectId);
+}
+
+// Load all projects for the current user from Firestore
+window.loadUserProjects = async function() {
+  setSaveStatus('saving');
+  try {
+    var colRef = getUserProjectsRef();
+    if (!colRef) return;
+    var q = window._fb.query(colRef, window._fb.orderBy('createdAt', 'desc'));
+    var snap = await window._fb.getDocs(q);
+    PROJECTS = [];
+    snap.forEach(function(docSnap) {
+      var data = docSnap.data();
+      data._firestoreId = docSnap.id; // Store Firestore doc ID
+      PROJECTS.push(data);
+    });
+    buildDashboard();
+    setSaveStatus('saved');
+    toast('✓ ' + PROJECTS.length + ' project(s) loaded from cloud');
+  } catch(e) {
+    setSaveStatus('error');
+    console.error('Load error:', e);
+    toast('⚠ Could not load projects: ' + e.message, true);
+  }
+};
+
+// Save the CURRENT project to Firestore using its unique ID
+// MIRROR-KILLER: only saves to window.currentProjectId, never overwrites another project
+async function saveCurrentProject() {
+  if (!window._currentUser) { setSaveStatus('error'); return; }
+  if (!window.currentProjectId) {
+    // Should not happen — every project gets an ID at creation
+    console.warn('No currentProjectId set — skipping save');
+    return;
+  }
+
+  setSaveStatus('saving');
+  try {
+    // Collect all form fields
+    var inputs = {};
+    document.querySelectorAll('[id]').forEach(function(el) {
+      if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+        inputs[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+      }
+    });
+
+    var p = PROJECTS[ACTIVE_PROJ];
+    if (!p) { setSaveStatus('error'); return; }
+
+    var pct = Math.round(
+      Object.keys(DONE).filter(function(k){ return DONE[k]; }).length / MODS.length * 100
+    );
+
+    var payload = {
+      name: p.name || '',
+      client: p.client || '',
+      location: p.location || '',
+      type: p.type || '',
+      projType: PROJ_TYPE || '',
+      progress: pct,
+      status: p.status || 'active',
+      done: DONE,
+      inputs: inputs,
+      reportsGenerated: REPORTS_GENERATED,
+      updatedAt: window._fb.serverTimestamp()
+    };
+
+    // Write ONLY to this project's document — never touches other project docs
+    var docRef = getProjectDocRef(window.currentProjectId);
+    await window._fb.setDoc(docRef, payload, { merge: true });
+
+    // Also update local cache
+    PROJECTS[ACTIVE_PROJ].done = DONE;
+    PROJECTS[ACTIVE_PROJ].progress = pct;
+    PROJECTS[ACTIVE_PROJ].inputs = inputs;
+
+    // Mirror to localStorage as offline fallback
+    try {
+      localStorage.setItem(
+        'arnorex_proj_' + window.currentProjectId,
+        JSON.stringify(payload)
+      );
+    } catch(lsErr) {}
+
+    setSaveStatus('saved');
+  } catch(e) {
+    setSaveStatus('error');
+    console.error('Save error:', e);
+  }
+}
+
+// Load a specific project from Firestore by its unique ID
+async function loadProjectFromCloud(projectId) {
+  if (!window._currentUser || !projectId) return null;
+  try {
+    var docRef = getProjectDocRef(projectId);
+    var snap = await window._fb.getDoc(docRef);
+    if (snap.exists()) return snap.data();
+    // Fallback: try localStorage
+    var ls = localStorage.getItem('arnorex_proj_' + projectId);
+    return ls ? JSON.parse(ls) : null;
+  } catch(e) {
+    // Offline fallback
+    var ls = localStorage.getItem('arnorex_proj_' + projectId);
+    return ls ? JSON.parse(ls) : null;
+  }
+}
+
+// Delete a project from Firestore
+async function deleteProject(projectId) {
+  if (!window._currentUser || !projectId) return;
+  try {
+    var docRef = getProjectDocRef(projectId);
+    await window._fb.deleteDoc(docRef);
+    localStorage.removeItem('arnorex_proj_' + projectId);
+  } catch(e) { console.error('Delete error:', e); }
+}
+
+function setSaveStatus(state) {
+  var el = document.getElementById('save-txt');
+  if (!el) return;
+  if (state === 'saving') el.textContent = 'Saving to cloud...';
+  else if (state === 'saved') el.textContent = 'Cloud saved ✓';
+  else if (state === 'error') el.textContent = 'Save failed ⚠';
+}
+
+// ══════════════════════════════════
+//  SIDEBAR & NAVIGATION
+// ══════════════════════════════════
+
 function toggleSidebar() {
   IS_MOB = window.innerWidth <= 768;
   if (IS_MOB) {
@@ -1321,16 +1691,16 @@ function toggleSidebar() {
   } else {
     SB_OPEN = !SB_OPEN;
     var sb2 = document.getElementById('sidebar');
-    var ws = document.getElementById('workspace');
-    var tb = document.getElementById('topbar');
+    var ws  = document.getElementById('workspace');
+    var tb  = document.getElementById('topbar');
     if (SB_OPEN) {
       sb2.style.transform = '';
-      ws.style.marginLeft = 'var(--sidebar-w)';
-      tb.style.left = 'var(--sidebar-w)';
+      ws.style.marginLeft  = 'var(--sidebar-w)';
+      tb.style.left        = 'var(--sidebar-w)';
     } else {
-      sb2.style.transform = 'translateX(-100%)';
-      ws.style.marginLeft = '0';
-      tb.style.left = '0';
+      sb2.style.transform  = 'translateX(-100%)';
+      ws.style.marginLeft  = '0';
+      tb.style.left        = '0';
     }
   }
 }
@@ -1340,16 +1710,17 @@ function closeMobSidebar() {
   document.getElementById('mob-overlay').classList.remove('open');
 }
 
-// ── SCREENS ──
 function goScreen(id) {
-  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); s.style.display='none'; });
+  document.querySelectorAll('.screen').forEach(function(s){
+    s.classList.remove('active'); s.style.display = 'none';
+  });
   var t = document.getElementById('screen-' + id);
   if (t) { t.style.display = 'block'; t.classList.add('active'); window.scrollTo(0,0); }
-  // Update sidebar
   document.querySelectorAll('.sb-item').forEach(function(el){ el.classList.remove('active'); });
   var nav = document.getElementById('nav-' + id);
   if (nav) nav.classList.add('active');
-  if (id === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+  if (id === 'dashboard' && document.getElementById('nav-dashboard'))
+    document.getElementById('nav-dashboard').classList.add('active');
   if (IS_MOB) closeMobSidebar();
 }
 
@@ -1359,75 +1730,169 @@ function goMod(modId) {
   if (modId === 'soc-impacts') renderSuggest('soc-suggest-area', PROJ_TYPE);
 }
 
-// ── PROJECT MANAGEMENT ──
+// ══════════════════════════════════
+//  PROJECT MANAGEMENT
+//  Each project gets a unique Firestore-generated ID
+//  window.currentProjectId is set ONCE per project open — never carried over
+// ══════════════════════════════════
+
 function getNewProjType() {
   var sel = document.querySelector('#np-type-row .pt-chip.sel');
   return sel ? sel.dataset.type : '';
 }
 
-function createProject() {
-  var name = document.getElementById('np-name').value.trim();
-  var client = document.getElementById('np-client').value.trim();
+async function createProject() {
+  var name     = document.getElementById('np-name').value.trim();
+  var client   = document.getElementById('np-client').value.trim();
+  var location = document.getElementById('np-location').value.trim();
+  var type     = getNewProjType() || 'Other';
+
   if (!name) { toast('Please enter a project name', true); return; }
-  var proj = {
-    id: Date.now(),
+  if (!window._currentUser) { toast('Please sign in first', true); return; }
+
+  var uid = window._currentUser.uid;
+
+  // Generate a unique project ID using Firestore addDoc pattern
+  // We use Date.now() + random for guaranteed uniqueness (no mirroring)
+  var uniqueId = 'proj_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+  var newProj = {
+    _firestoreId: uniqueId,
     name: name,
     client: client || '—',
-    location: document.getElementById('np-location').value.trim() || '—',
-    type: getNewProjType() || 'Other',
+    location: location || '—',
+    type: type,
+    projType: type,
     created: new Date().toLocaleDateString('en-GB'),
+    createdAt: window._fb.serverTimestamp(),
     progress: 0,
     status: 'active',
     done: {},
-    projType: getNewProjType() || ''
+    inputs: {},
+    reportsGenerated: 0,
+    ownerUid: uid
   };
-  PROJECTS.push(proj);
-  ACTIVE_PROJ = PROJECTS.length - 1;
-  openProject(ACTIVE_PROJ);
-  // Clear new project form
-  ['np-name','np-client','np-location'].forEach(function(id){ document.getElementById(id).value=''; });
-  document.querySelectorAll('#np-type-row .pt-chip').forEach(function(c){ c.classList.remove('sel'); });
-  saveAll();
-  toast('✓ Project created — let\'s build your ESIA');
+
+  try {
+    // Save to Firestore with the unique ID as document ID
+    var docRef = window._fb.doc(window._fb.db, 'users', uid, 'projects', uniqueId);
+    await window._fb.setDoc(docRef, newProj);
+
+    // Add to local cache
+    PROJECTS.unshift(newProj);
+    ACTIVE_PROJ = 0;
+
+    // CRITICAL: Set the Mirror Killer
+    window.currentProjectId = uniqueId;
+
+    // Clear form
+    ['np-name','np-client','np-location'].forEach(function(id){
+      var e = document.getElementById(id); if(e) e.value='';
+    });
+    document.querySelectorAll('#np-type-row .pt-chip').forEach(function(c){ c.classList.remove('sel'); });
+
+    openProject(0);
+    buildDashboard();
+    toast('✓ Project created and saved to cloud!');
+  } catch(e) {
+    console.error('Create project error:', e);
+    toast('⚠ Could not create project: ' + e.message, true);
+  }
 }
 
-function openProject(idx) {
+async function openProject(idx) {
+  // MIRROR KILLER: clear current project state before loading new one
+  // This ensures no data bleeds from a previous project
+  clearFormFields();
+
   ACTIVE_PROJ = idx;
   var p = PROJECTS[idx];
   if (!p) return;
-  DONE = p.done || {};
-  PROJ_TYPE = p.projType || '';
+
+  // Set the unique project ID — ALL saves will target only this document
+  window.currentProjectId = p._firestoreId;
+  DONE = {};   // Reset done state
+  PROJ_TYPE = '';  // Reset project type
+
+  // Load fresh data from Firestore (not from another project's state)
+  setSaveStatus('saving');
+  var cloudData = await loadProjectFromCloud(p._firestoreId);
+  setSaveStatus('saved');
+
+  if (cloudData) {
+    DONE = cloudData.done || {};
+    PROJ_TYPE = cloudData.projType || p.projType || '';
+    // Restore form fields from cloud data
+    if (cloudData.inputs) {
+      Object.keys(cloudData.inputs).forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (el.type === 'checkbox') el.checked = cloudData.inputs[id];
+        else el.value = cloudData.inputs[id];
+      });
+    }
+    // Update local cache
+    PROJECTS[idx].done = DONE;
+    PROJECTS[idx].progress = cloudData.progress || 0;
+    PROJECTS[idx].inputs = cloudData.inputs || {};
+  }
+
   // Update topbar
-  document.getElementById('tb-project').innerHTML = p.name + ' <span>— ' + p.type + ' · ' + p.location + '</span>';
+  var topProj = document.getElementById('tb-project');
+  if (topProj) topProj.innerHTML = p.name + ' <span>— ' + p.type + ' · ' + p.location + '</span>';
+
   // Update project header
-  document.getElementById('ph-name').textContent = p.name;
-  document.getElementById('ph-meta').textContent = p.client + ' · ' + p.location + ' · ' + p.type;
+  setEl('ph-name', p.name);
+  setEl('ph-meta', p.client + ' · ' + p.location + ' · ' + p.type);
   var icons = {'Solar PV':'☀️','Wind Energy':'💨','Hydro Power':'💧','Mining':'⛏️','Road/Transport':'🛣️','Industrial':'🏭','Agriculture':'🌾','Building':'🏗️','Oil & Gas':'🛢️','Other':'📋'};
-  document.getElementById('ph-icon').textContent = icons[p.type] || '🌿';
-  // Sync cover fields
+  setEl('ph-icon', icons[p.type] || '🌿');
+
+  // Sync cover fields with project metadata
   setFld('cv-proj-name', p.name);
-  setFld('cv-client-f', p.client);
-  setFld('cv-location', p.location);
-  // Update project type chips
-  document.querySelectorAll('.pt-chip').forEach(function(c){ c.classList.toggle('sel', c.dataset.type === PROJ_TYPE); });
+  setFld('cv-client-f', p.client !== '—' ? p.client : '');
+  setFld('cv-location', p.location !== '—' ? p.location : '');
+
+  // Sync project type chips
+  document.querySelectorAll('.pt-chip').forEach(function(c){
+    c.classList.toggle('sel', c.dataset.type === PROJ_TYPE);
+  });
+
   buildModulesGrid();
   updateProjectProgress();
   updateSidebarBadges();
   goScreen('project');
 }
 
+// Clear all form fields — prevents data from one project showing in another
+function clearFormFields() {
+  document.querySelectorAll(
+    '#workspace input:not([type=button]):not([type=submit]),' +
+    '#workspace select,' +
+    '#workspace textarea'
+  ).forEach(function(el) {
+    if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+  // Reset score cells in impact tables
+  document.querySelectorAll('.score-cell').forEach(function(c){ c.textContent = '—'; });
+  document.querySelectorAll('.sig-cell').forEach(function(c){ c.textContent = '—'; });
+  // Reset project type chips
+  document.querySelectorAll('.pt-chip').forEach(function(c){ c.classList.remove('sel'); });
+}
+
 function buildModulesGrid() {
   var grid = document.getElementById('modules-grid');
+  if (!grid) return;
   grid.innerHTML = MODS.map(function(m) {
     var isDone = DONE[m.id];
     var pct = isDone ? 100 : 0;
-    return '<div class="mod-card' + (isDone?' done':'') + '" onclick="goMod(\'' + m.id + '\')">' +
+    return '<div class="mod-card' + (isDone ? ' done' : '') + '" onclick="goMod(\'' + m.id + '\')">' +
       '<div class="mod-card-top">' +
-        '<div class="mod-icon" style="background:linear-gradient(135deg,#'+m.color.replace(',','40%, #')+')">' + m.icon + '</div>' +
-        '<div class="mod-status-pill ' + (isDone?'msp-done':'msp-none') + '">' + (isDone?'✓ Done':'Not started') + '</div>' +
+        '<div class="mod-icon" style="background:linear-gradient(135deg,#' + m.color.replace(',', '40%, #') + ')">' + m.icon + '</div>' +
+        '<div class="mod-status-pill ' + (isDone ? 'msp-done' : 'msp-none') + '">' + (isDone ? '✓ Done' : 'Not started') + '</div>' +
       '</div>' +
       '<div class="mod-title">' + m.title + '</div>' +
-      '<div class="mod-desc">' + (MOD_DESCS[m.id]||'') + '</div>' +
+      '<div class="mod-desc">' + (MOD_DESCS[m.id] || '') + '</div>' +
       '<div class="mod-prog-bar"><div class="mod-prog-fill" style="width:' + pct + '%"></div></div>' +
       '<div class="mod-open-btn">Open module →</div>' +
     '</div>';
@@ -1435,11 +1900,15 @@ function buildModulesGrid() {
 }
 
 function updateProjectProgress() {
-  var pct = Math.round(Object.keys(DONE).filter(function(k){return DONE[k];}).length / MODS.length * 100);
-  document.getElementById('php-pct').textContent = pct + '%';
-  document.getElementById('php-fill').style.width = pct + '%';
-  document.getElementById('prw-pct').textContent = pct + '%';
-  document.getElementById('prw-fill').style.width = pct + '%';
+  var pct = Math.round(
+    Object.keys(DONE).filter(function(k){ return DONE[k]; }).length / MODS.length * 100
+  );
+  setEl('php-pct', pct + '%');
+  setEl('prw-pct', pct + '%');
+  var phpFill = document.getElementById('php-fill');
+  var prwFill = document.getElementById('prw-fill');
+  if (phpFill) phpFill.style.width = pct + '%';
+  if (prwFill) prwFill.style.width = pct + '%';
   if (ACTIVE_PROJ !== null && PROJECTS[ACTIVE_PROJ]) {
     PROJECTS[ACTIVE_PROJ].progress = pct;
     PROJECTS[ACTIVE_PROJ].done = DONE;
@@ -1462,21 +1931,21 @@ function toggleModDone(modId) {
   updateSidebarBadges();
   buildModulesGrid();
   toast(DONE[modId] ? '✓ Module marked complete' : 'Module marked incomplete');
-  saveAll();
+  scheduleSave();
 }
 
-// ── DASHBOARD & PROJECT CARDS ──
+// ── DASHBOARD ──
 function buildDashboard() {
-  var total = PROJECTS.length;
-  var active = PROJECTS.filter(function(p){return p.status==='active';}).length;
-  var done = PROJECTS.filter(function(p){return p.progress===100;}).length;
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-active').textContent = active;
-  document.getElementById('stat-done').textContent = done;
-  document.getElementById('stat-reports').textContent = REPORTS_GENERATED;
-  document.getElementById('sb-proj-count').textContent = total;
-  var recent = PROJECTS.slice(-3).reverse();
-  buildProjGrid('dash-proj-grid', recent, true);
+  var total  = PROJECTS.length;
+  var active = PROJECTS.filter(function(p){ return p.status === 'active'; }).length;
+  var done   = PROJECTS.filter(function(p){ return p.progress === 100; }).length;
+  setEl('stat-total', total);
+  setEl('stat-active', active);
+  setEl('stat-done', done);
+  setEl('stat-reports', REPORTS_GENERATED);
+  var sbCount = document.getElementById('sb-proj-count');
+  if (sbCount) sbCount.textContent = total;
+  buildProjGrid('dash-proj-grid', PROJECTS.slice(0,3), true);
   buildProjGrid('all-proj-grid', PROJECTS, false);
 }
 
@@ -1484,60 +1953,65 @@ function buildProjGrid(gridId, projs, includeNew) {
   var g = document.getElementById(gridId);
   if (!g) return;
   var html = '';
-  projs.forEach(function(p, i) {
+  projs.forEach(function(p) {
     var realIdx = PROJECTS.indexOf(p);
-    var statusCls = p.progress===100?'status-complete':p.status==='active'?'status-active':'status-draft';
-    var statusTxt = p.progress===100?'Complete':p.status==='active'?'Active':'Draft';
+    var statusCls = p.progress===100 ? 'status-complete' : p.status==='active' ? 'status-active' : 'status-draft';
+    var statusTxt = p.progress===100 ? 'Complete' : p.status==='active' ? 'Active' : 'Draft';
     html += '<div class="proj-card" onclick="openProject(' + realIdx + ')">' +
-      '<div class="pc-type">' + (p.type||'ESIA Project') + '</div>' +
-      '<div class="pc-name">' + p.name + '</div>' +
-      '<div class="pc-loc">📍 ' + p.location + '</div>' +
-      '<div class="pc-progress"><div class="pc-progress-label"><span>Progress</span><span>' + p.progress + '%</span></div><div class="pc-progress-bar"><div class="pc-progress-fill" style="width:' + p.progress + '%"></div></div></div>' +
-      '<div class="pc-footer"><span class="pc-date">Created ' + p.created + '</span><span class="pc-status ' + statusCls + '">' + statusTxt + '</span></div>' +
+      '<div class="pc-type">' + (p.type || 'ESIA Project') + '</div>' +
+      '<div class="pc-name">' + (p.name || 'Unnamed') + '</div>' +
+      '<div class="pc-loc">📍 ' + (p.location || '—') + '</div>' +
+      '<div class="pc-progress">' +
+        '<div class="pc-progress-label"><span>Progress</span><span>' + (p.progress||0) + '%</span></div>' +
+        '<div class="pc-progress-bar"><div class="pc-progress-fill" style="width:' + (p.progress||0) + '%"></div></div>' +
+      '</div>' +
+      '<div class="pc-footer">' +
+        '<span class="pc-date">Created ' + (p.created||'—') + '</span>' +
+        '<span class="pc-status ' + statusCls + '">' + statusTxt + '</span>' +
+      '</div>' +
     '</div>';
   });
   if (includeNew || projs.length === 0) {
-    html += '<div class="proj-card new-card" onclick="goScreen(\'new-project\')"><div class="nc-icon">+</div><div class="nc-label">New ESIA Project</div></div>';
+    html += '<div class="proj-card new-card" onclick="goScreen(\'new-project\')">' +
+      '<div class="nc-icon">+</div><div class="nc-label">New ESIA Project</div>' +
+    '</div>';
   }
   g.innerHTML = html;
 }
 
 // ── COVER PREVIEW ──
 function updateCoverPreview() {
-  function f(id){ var e=document.getElementById(id); return e?e.value:''; }
-  function s(id, v){ var e=document.getElementById(id); if(e) e.textContent=v||'—'; }
   var pnEl = document.getElementById('cp-name');
-  if (pnEl) pnEl.textContent = f('cv-proj-name') || '[Project Name]';
-  s('cp-client', f('cv-client-f'));
-  s('cp-loc', f('cv-location'));
-  s('cp-date', f('cv-date-f'));
-  s('cp-ver', f('cv-version'));
-  s('cp-auth', f('cv-authority') || 'NEMC');
+  if (pnEl) pnEl.textContent = getFld('cv-proj-name') || '[Project Name]';
+  setElTxt('cp-client', getFld('cv-client-f'));
+  setElTxt('cp-loc',    getFld('cv-location'));
+  setElTxt('cp-date',   getFld('cv-date-f'));
+  setElTxt('cp-ver',    getFld('cv-version'));
+  setElTxt('cp-auth',   getFld('cv-authority') || 'NEMC');
   scheduleSave();
 }
 
 // ── SECTION CARD TOGGLE ──
 function toggleCard(hdr) {
-  var body = hdr.nextElementSibling;
+  var body    = hdr.nextElementSibling;
   var chevron = hdr.querySelector('.sc-chevron');
-  var open = body.classList.contains('open');
+  var open    = body.classList.contains('open');
   body.classList.toggle('open', !open);
   body.style.display = open ? 'none' : 'block';
   hdr.classList.toggle('open', !open);
   if (chevron) chevron.classList.toggle('open', !open);
 }
 
-// ── PROJECT TYPE ──
+// ── PROJECT TYPE CHIPS ──
 document.addEventListener('click', function(e) {
   var chip = e.target.closest('.pt-chip');
-  if (!chip) return;
-  var type = chip.dataset.type;
-  if (!type) return;
-  PROJ_TYPE = type;
-  // Sync all type grids
-  document.querySelectorAll('.pt-chip').forEach(function(c){ c.classList.toggle('sel', c.dataset.type===type); });
-  if (ACTIVE_PROJ !== null && PROJECTS[ACTIVE_PROJ]) PROJECTS[ACTIVE_PROJ].projType = type;
-  renderSuggest('env-suggest-area', type);
+  if (!chip || !chip.dataset.type) return;
+  PROJ_TYPE = chip.dataset.type;
+  document.querySelectorAll('.pt-chip').forEach(function(c){
+    c.classList.toggle('sel', c.dataset.type === PROJ_TYPE);
+  });
+  if (ACTIVE_PROJ !== null && PROJECTS[ACTIVE_PROJ]) PROJECTS[ACTIVE_PROJ].projType = PROJ_TYPE;
+  renderSuggest('env-suggest-area', PROJ_TYPE);
   scheduleSave();
 });
 
@@ -1578,199 +2052,183 @@ function calcScore(inp) {
     if (!isNaN(n) && n >= 1) v.push(n);
   }
   if (v.length === 4) {
-    var score = v[0]*v[1]*v[2]*v[3];
-    var sc = row.querySelector('.score-cell'); if(sc) sc.textContent = score;
+    var score = v[0] * v[1] * v[2] * v[3];
+    var sc = row.querySelector('.score-cell'); if (sc) sc.textContent = score;
     var si = row.querySelector('.sig-cell');
     if (si) {
       var lbl, cls;
-      if (score<10){lbl='Negligible';cls='sn';}
-      else if(score<30){lbl='Low';cls='sl';}
-      else if(score<60){lbl='Moderate';cls='sm';}
-      else if(score<90){lbl='High';cls='sh';}
-      else{lbl='Critical';cls='sc-sig';}
-      si.innerHTML = '<span class="sig-badge '+cls+'">'+lbl+'</span>';
+      if (score < 10)      { lbl = 'Negligible'; cls = 'sn'; }
+      else if (score < 30) { lbl = 'Low';        cls = 'sl'; }
+      else if (score < 60) { lbl = 'Moderate';   cls = 'sm'; }
+      else if (score < 90) { lbl = 'High';       cls = 'sh'; }
+      else                 { lbl = 'Critical';    cls = 'sc-sig'; }
+      si.innerHTML = '<span class="sig-badge ' + cls + '">' + lbl + '</span>';
     }
   }
   scheduleSave();
 }
 
-// ── TABLES ──
-function delRow(btn){ var r=btn.closest('tr'); if(r) r.parentNode.removeChild(r); scheduleSave(); }
+// ── TABLE HELPERS ──
+function delRow(btn) {
+  var r = btn.closest('tr');
+  if (r) r.parentNode.removeChild(r);
+  scheduleSave();
+}
 
 function addRow(tbodyId, html) {
-  var tb = document.getElementById(tbodyId); if(!tb) return;
-  var tr = document.createElement('tr'); tr.innerHTML = html; tb.appendChild(tr); scheduleSave();
+  var tb = document.getElementById(tbodyId);
+  if (!tb) return;
+  var tr = document.createElement('tr');
+  tr.innerHTML = html;
+  tb.appendChild(tr);
+  scheduleSave();
 }
 
 function addImpactRow(tbodyId, placeholder) {
   var pl = placeholder || 'Impact';
-  var phases = tbodyId==='tb-soc'
+  var phases = tbodyId === 'tb-soc'
     ? '<option>Pre-Construction</option><option>Construction</option><option>Operation</option><option>All Phases</option>'
     : '<option>Construction</option><option>Operation</option><option>All Phases</option><option>Decommissioning</option>';
   addRow(tbodyId,
-    '<td><input type="text" value="'+pl.replace(/"/g,'&quot;')+'" style="min-width:110px"/></td>'+
-    '<td><select>'+phases+'</select></td>'+
-    '<td><input type="number" min="1" max="5" placeholder="1–5" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>'+
-    '<td><input type="number" min="1" max="4" placeholder="1–4" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>'+
-    '<td><input type="number" min="1" max="3" placeholder="1–3" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>'+
-    '<td><input type="number" min="1" max="3" placeholder="1–3" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>'+
-    '<td class="score-cell" style="font-weight:700">—</td><td class="sig-cell">—</td>'+
-    '<td><input type="text" placeholder="Mitigation measure" style="min-width:140px"/></td>'+
-    '<td><select><option>Negligible</option><option>Low</option><option>Moderate</option><option>High</option><option>Critical</option></select></td>'+
+    '<td><input type="text" value="' + pl.replace(/"/g,'&quot;') + '" style="min-width:110px"/></td>' +
+    '<td><select>' + phases + '</select></td>' +
+    '<td><input type="number" min="1" max="5" placeholder="1–5" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>' +
+    '<td><input type="number" min="1" max="4" placeholder="1–4" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>' +
+    '<td><input type="number" min="1" max="3" placeholder="1–3" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>' +
+    '<td><input type="number" min="1" max="3" placeholder="1–3" oninput="calcScore(this)" style="width:42px;text-align:center"/></td>' +
+    '<td class="score-cell" style="font-weight:700">—</td><td class="sig-cell">—</td>' +
+    '<td><input type="text" placeholder="Mitigation measure" style="min-width:140px"/></td>' +
+    '<td><select><option>Negligible</option><option>Low</option><option>Moderate</option><option>High</option><option>Critical</option></select></td>' +
     '<td><button class="del-r" onclick="delRow(this)">✕</button></td>');
 }
 
-// ── HELPER: SET FIELD VALUE ──
-function setFld(id, val){ var e=document.getElementById(id); if(e&&val) e.value=val; }
-function getFld(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
+// ── DOM HELPERS ──
+function setFld(id, val) { var e = document.getElementById(id); if (e && val) e.value = val; }
+function getFld(id)       { var e = document.getElementById(id); return e ? e.value.trim() : ''; }
+function setEl(id, txt)   { var e = document.getElementById(id); if (e) e.textContent = txt; }
+function setElTxt(id, txt){ var e = document.getElementById(id); if (e) e.textContent = txt || '—'; }
 
-// ── AUTO-SAVE ──
+// ── DEBOUNCED AUTO-SAVE TO FIRESTORE ──
 function scheduleSave() {
+  // Only save if there is an active project with an ID
+  if (!window.currentProjectId) return;
   clearTimeout(SAVE_TIMER);
-  document.getElementById('save-txt').textContent = 'Saving...';
-  SAVE_TIMER = setTimeout(saveAll, 700);
+  setSaveStatus('saving');
+  SAVE_TIMER = setTimeout(function() {
+    saveCurrentProject();
+  }, 1200); // 1.2s debounce — avoids saving on every keystroke
 }
 
-function saveAll() {
-  try {
-    // Sync current project fields
-    if (ACTIVE_PROJ !== null && PROJECTS[ACTIVE_PROJ]) {
-      var p = PROJECTS[ACTIVE_PROJ];
-      p.done = DONE;
-      p.projType = PROJ_TYPE;
-      p.progress = Math.round(Object.keys(DONE).filter(function(k){return DONE[k];}).length / MODS.length * 100);
-      // Save all form field values
-      var inputs = {};
-      document.querySelectorAll('[id]').forEach(function(el){
-        if (el.tagName==='INPUT'||el.tagName==='SELECT'||el.tagName==='TEXTAREA') {
-          inputs[el.id] = el.type==='checkbox' ? el.checked : el.value;
-        }
-      });
-      p.inputs = inputs;
-    }
-    var data = { v:5, projects: PROJECTS, activeProj: ACTIVE_PROJ, projType: PROJ_TYPE, reportsGenerated: REPORTS_GENERATED };
-    localStorage.setItem('arnorex_v5', JSON.stringify(data));
-    document.getElementById('save-txt').textContent = 'Auto-saved';
-  } catch(e) { document.getElementById('save-txt').textContent = 'Save failed'; }
-}
-
-function loadAll() {
-  try {
-    var raw = localStorage.getItem('arnorex_v5');
-    if (!raw) return false;
-    var data = JSON.parse(raw);
-    if (data.projects) PROJECTS = data.projects;
-    REPORTS_GENERATED = data.reportsGenerated || 0;
-    if (data.activeProj !== null && data.activeProj !== undefined && PROJECTS[data.activeProj]) {
-      ACTIVE_PROJ = data.activeProj;
-      var p = PROJECTS[ACTIVE_PROJ];
-      DONE = p.done || {};
-      PROJ_TYPE = p.projType || '';
-      if (p.inputs) {
-        Object.keys(p.inputs).forEach(function(id){
-          var el = document.getElementById(id);
-          if (!el) return;
-          if (el.type==='checkbox') el.checked = p.inputs[id];
-          else el.value = p.inputs[id];
-        });
-      }
-      document.querySelectorAll('.pt-chip').forEach(function(c){ c.classList.toggle('sel', c.dataset.type===PROJ_TYPE); });
-      updateCoverPreview();
-    }
-    buildDashboard();
-    return true;
-  } catch(e) { return false; }
-}
-
-// ── SAVE/LOAD JSON FILE ──
+// ── MANUAL JSON BACKUP (offline / sharing) ──
 function saveJSON() {
-  saveAll();
-  var raw = localStorage.getItem('arnorex_v5');
-  if (!raw) { toast('Nothing to save yet', true); return; }
-  var projName = ACTIVE_PROJ!==null && PROJECTS[ACTIVE_PROJ] ? PROJECTS[ACTIVE_PROJ].name : 'ESIA_Projects';
-  var blob = new Blob([raw], {type:'application/json'});
-  var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-  a.download = projName.replace(/\s+/g,'_') + '_ESIAData.json'; a.click();
-  toast('✓ JSON backup saved');
+  if (ACTIVE_PROJ === null || !PROJECTS[ACTIVE_PROJ]) { toast('No project open', true); return; }
+  var p = PROJECTS[ACTIVE_PROJ];
+  var inputs = {};
+  document.querySelectorAll('[id]').forEach(function(el) {
+    if (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') {
+      inputs[el.id] = el.type === 'checkbox' ? el.checked : el.value;
+    }
+  });
+  var payload = { v:6, projectId: window.currentProjectId, project: p, inputs: inputs, done: DONE, projType: PROJ_TYPE };
+  var blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = (p.name || 'ESIA').replace(/\s+/g,'_') + '_backup.json';
+  a.click();
+  toast('✓ JSON backup downloaded');
 }
 
 function loadJSON() {
-  var inp = document.createElement('input'); inp.type='file'; inp.accept='.json';
+  var inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json';
   inp.onchange = function(e) {
     var r = new FileReader();
     r.onload = function(ev) {
       try {
         var data = JSON.parse(ev.target.result);
-        localStorage.setItem('arnorex_v5', JSON.stringify(data));
-        PROJECTS=[]; ACTIVE_PROJ=null; DONE={}; PROJ_TYPE='';
-        loadAll();
-        toast('✓ Session loaded');
-      } catch(err) { toast('✕ Error loading file', true); }
+        if (!data.inputs) { toast('Invalid backup file', true); return; }
+        // Restore inputs to current form
+        Object.keys(data.inputs).forEach(function(id) {
+          var el = document.getElementById(id);
+          if (!el) return;
+          if (el.type === 'checkbox') el.checked = data.inputs[id];
+          else el.value = data.inputs[id];
+        });
+        if (data.done) DONE = data.done;
+        if (data.projType) PROJ_TYPE = data.projType;
+        toast('✓ Backup restored — save to cloud with Ctrl+S');
+        scheduleSave();
+      } catch(err) { toast('✕ Error loading backup: ' + err.message, true); }
     };
     r.readAsText(e.target.files[0]);
   };
   inp.click();
 }
 
-// ── MODALS ──
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+// ── VALIDATE ──
 function openValidate() {
   var checks = [
-    {id:'cv-proj-name',label:'Project Name (Cover Page)'},
-    {id:'cv-client-f',label:'Client / Proponent (Cover Page)'},
-    {id:'sc-summary',label:'Scoping Outcome Summary (Ch. 0)'},
+    {id:'cv-proj-name', label:'Project Name (Cover Page)'},
+    {id:'cv-client-f',  label:'Client / Proponent (Cover Page)'},
+    {id:'sc-summary',   label:'Scoping Outcome Summary (Ch. 0)'},
     {id:'c1-background',label:'Project Background (Ch. 1)'},
     {id:'c1-methodology',label:'ESIA Methodology (Ch. 1)'},
-    {id:'c3-capacity',label:'Project Capacity / Scale (Ch. 3)'},
-    {id:'c4-soil',label:'Dominant Soil Type (Ch. 4)'},
-    {id:'c4-veg',label:'Dominant Vegetation Type (Ch. 4)'},
-    {id:'c5-landuse',label:'Current Land Use on Site (Ch. 5)'},
-    {id:'c6-rationale',label:'Rationale for Selected Option (Ch. 6)'},
-    {id:'c10-grm',label:'GRM Description (Ch. 10)'},
-    {id:'c11-esm',label:'E&S Manager Name (Ch. 11)'},
-    {id:'c12-erp',label:'Emergency Response Plan (Ch. 12)'},
+    {id:'c3-capacity',  label:'Project Capacity / Scale (Ch. 3)'},
+    {id:'c4-soil',      label:'Dominant Soil Type (Ch. 4)'},
+    {id:'c4-veg',       label:'Dominant Vegetation Type (Ch. 4)'},
+    {id:'c5-landuse',   label:'Current Land Use on Site (Ch. 5)'},
+    {id:'c6-rationale', label:'Rationale for Selected Option (Ch. 6)'},
+    {id:'c10-grm',      label:'GRM Description (Ch. 10)'},
+    {id:'c11-esm',      label:'E&S Manager Name (Ch. 11)'},
+    {id:'c12-erp',      label:'Emergency Response Plan (Ch. 12)'},
     {id:'c13-conclusion',label:'Formal Conclusion Statement (Ch. 13)'},
-    {id:'sig-tl-name',label:'Team Leader Name (Signatures)'},
-    {id:'sig-pr-name',label:'Proponent Representative Name (Signatures)'}
+    {id:'sig-tl-name',  label:'Team Leader Name (Signatures)'},
+    {id:'sig-pr-name',  label:'Proponent Representative Name (Signatures)'}
   ];
-  var missing = checks.filter(function(c){ var e=document.getElementById(c.id); return !e||!e.value.trim(); });
+  var missing = checks.filter(function(c){
+    var e = document.getElementById(c.id);
+    return !e || !e.value.trim();
+  });
   var html = '';
-  if (!missing.length) html = '<div class="val-ok">✓ All required fields complete. Ready to generate report.</div>';
-  else {
-    html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px">'+missing.length+' required field(s) need attention:</p>';
-    missing.forEach(function(c){ html += '<div class="val-issue">⚠ '+c.label+'</div>'; });
+  if (!missing.length) {
+    html = '<div class="val-ok">✓ All required fields complete. Ready to generate report.</div>';
+  } else {
+    html = '<p style="font-size:12px;color:var(--muted);margin-bottom:10px">' + missing.length + ' required field(s) need attention:</p>';
+    missing.forEach(function(c){ html += '<div class="val-issue">⚠ ' + c.label + '</div>'; });
   }
   document.getElementById('val-results').innerHTML = html;
   document.getElementById('val-modal').classList.add('open');
 }
+
 function openExport() { document.getElementById('exp-modal').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
 // ── TOAST ──
 function toast(msg, isErr) {
   var t = document.getElementById('toast');
+  if (!t) return;
   document.getElementById('toast-msg').textContent = msg;
-  t.className = 'show' + (isErr?' err':'');
-  clearTimeout(t._t); t._t = setTimeout(function(){ t.className=''; }, 3200);
+  t.className = 'show' + (isErr ? ' err' : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(function(){ t.className = ''; }, 3200);
 }
 
 // ── PDF EXPORT ──
 function exportPDF() {
-  if (!window.jspdf) { toast('⚠ PDF library loading — retry in a moment', true); return; }
-  REPORTS_GENERATED++; saveAll();
+  if (!window.jspdf) { toast('⚠ PDF library loading — retry', true); return; }
+  REPORTS_GENERATED++;
   var jsPDF = window.jspdf.jsPDF;
   var doc = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
   var PW=210,ML=15,CW=PW-ML-ML,y=15,pg=1;
-
   function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
   function addFtr(){ doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(120,150,170);doc.text('Arnorex ESIA Pro  |  arnoldelikunda@gmail.com  |  Page '+pg,PW/2,290,{align:'center'});doc.setDrawColor(14,165,233);doc.setLineWidth(0.3);doc.line(ML,285,PW-ML,285); }
   function addHdr(){ doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100,116,139);doc.text((v('cv-proj-name')||'ESIA Report')+' — Environmental & Social Impact Assessment',ML,10);doc.setDrawColor(226,232,240);doc.setLineWidth(0.3);doc.line(ML,12,PW-ML,12);y=18; }
   function chkY(n){ if(y+n>278){addFtr();doc.addPage();pg++;y=15;addHdr();} }
   function h1(t){ chkY(14);doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(15,23,42);doc.text(t,ML,y);y+=2;doc.setDrawColor(14,165,233);doc.setLineWidth(0.5);doc.line(ML,y,PW-ML,y);y+=7; }
   function h2(t){ chkY(10);doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(30,80,140);doc.text(t,ML,y);y+=6; }
-  function body(t){ if(!t) return;chkY(6);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);doc.splitTextToSize(t,CW).forEach(function(l){ chkY(5);doc.text(l,ML,y);y+=5; });y+=2; }
-  function pair(l,v2){ if(!v2) return;chkY(9);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(71,85,105);doc.text(l.toUpperCase(),ML,y);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);doc.text(v2,ML+52,y,{maxWidth:CW-54});y+=6; }
-
-  // COVER
+  function body(t){ if(!t)return;chkY(6);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);doc.splitTextToSize(t,CW).forEach(function(l){chkY(5);doc.text(l,ML,y);y+=5;});y+=2; }
+  function pair(l,v2){ if(!v2)return;chkY(9);doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(71,85,105);doc.text(l.toUpperCase(),ML,y);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);doc.text(v2,ML+52,y,{maxWidth:CW-54});y+=6; }
+  // Cover page
   doc.setFillColor(15,23,42);doc.rect(0,0,PW,297,'F');
   doc.setFillColor(14,165,233);doc.rect(0,125,PW,1.5,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(14,165,233);doc.text('ARNOREX ESIA PRO',PW/2,52,{align:'center'});
@@ -1781,41 +2239,34 @@ function exportPDF() {
   var meta=[[v('cv-location'),'📍 Location'],[v('cv-date-f'),'📅 Date'],[v('cv-version'),'📋 Version'],[v('cv-authority')||'NEMC','🏛️ Authority'],[v('cv-stage'),'📊 Stage']].filter(function(m){return m[0];});
   doc.setFillColor(22,32,53);doc.roundedRect(ML,140,CW,meta.length*12+8,3,3,'F');
   var my=150;
-  meta.forEach(function(m){
-    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(14,165,233);doc.text(m[1].toUpperCase(),ML+6,my);
-    doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(240,244,248);doc.text(m[0],ML+52,my,{maxWidth:CW-56});my+=12;
-  });
+  meta.forEach(function(m){doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(14,165,233);doc.text(m[1].toUpperCase(),ML+6,my);doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(240,244,248);doc.text(m[0],ML+52,my,{maxWidth:CW-56});my+=12;});
   doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(80,120,160);
   doc.text('Prepared by Arnold Elikunda  |  arnoldelikunda@gmail.com  |  +255 773 223 565',PW/2,274,{align:'center'});
   doc.text('linkedin.com/in/arnoldelikunda  |  @Arnold_Elikunda  |  WhatsApp: +255 773 223 565',PW/2,280,{align:'center'});
-
-  // CONTENT
+  // Content pages
   doc.addPage();pg=2;addHdr();
-  function ch(n,t,fn){ chkY(14);h1('Ch.'+n+': '+t);fn();y+=4; }
-  ch('0','Scoping & TOR',function(){ pair('TOR Reference',v('sc-tor-ref'));pair('ESIA Category',v('sc-category'));h2('Scoping Outcome Summary');body(v('sc-summary')); });
-  ch('1','Introduction',function(){ h2('Project Background');body(v('c1-background'));h2('Purpose & Objectives');body(v('c1-purpose'));h2('ESIA Methodology');body(v('c1-methodology'));pair('Area of Influence',v('c1-aoi')?v('c1-aoi')+' km':'');pair('Limitations',v('c1-limitations')); });
-  ch('3','Project Description',function(){ pair('Capacity / Scale',v('c3-capacity'));pair('Land Area (ha)',v('c3-area'));pair('Construction Duration',v('c3-constr'));pair('Capital Cost (USD)',v('c3-cost'));h2('Components');body(v('c3-components'));pair('Peak Workers',v('c3-workers'));pair('Local Employment Target',v('c3-local')+'%'); });
-  ch('4','Environmental Baseline',function(){ pair('Annual Rainfall (mm)',v('c4-rain'));pair('Min/Max Temp (°C)',v('c4-tmin')+'/'+v('c4-tmax'));pair('Dominant Soil Type',v('c4-soil'));pair('Erosion Susceptibility',v('c4-erosion'));h2('Geology');body(v('c4-geology'));pair('Nearest River',v('c4-river'));pair('Flood Risk',v('c4-flood'));pair('Dominant Vegetation',v('c4-veg'));pair('Nearest Protected Area',v('c4-pa'));body(v('c4-sensitive')); });
-  ch('5','Social Baseline',function(){ pair('Current Land Use',v('c5-landuse'));pair('Land Tenure',v('c5-tenure'));pair('Physically Displaced HH',v('c5-phys'));pair('Economically Displaced HH',v('c5-econ'));pair('Avg Monthly Income',v('c5-income'));pair('Primary Livelihood',v('c5-livelihood')); });
-  ch('6','Alternatives',function(){ h2('Rationale for Selected Option');body(v('c6-rationale'));h2('Technology Alternatives');body(v('c6-tech')); });
-  ch('9','Cumulative Impacts',function(){ body(v('c9-hydro'));body(v('c9-bio'));body(v('c9-soc'));h2('Conclusion');body(v('c9-conclusion')); });
-  ch('10','Stakeholder Engagement',function(){ h2('GRM');body(v('c10-grm'));pair('GRM Focal Point',v('c10-grm-name'));pair('GRM Contact',v('c10-grm-contact')); });
-  ch('11','ESMP',function(){ pair('E&S Manager',v('c11-esm'));pair('Reporting Frequency',v('c11-report')); });
-  ch('12','Emergency Response',function(){ body(v('c12-erp'));pair('Emergency Coordinator',v('c12-coord'));pair('Emergency Contact',v('c12-contact')); });
-  ch('13','Conclusion',function(){ pair('Feasibility Outcome',v('c13-outcome'));h2('Formal Conclusion Statement');body(v('c13-conclusion'));h2('Recommendations');body(v('c13-recs')); });
+  function ch(n,t,fn){chkY(14);h1('Ch.'+n+': '+t);fn();y+=4;}
+  ch('0','Scoping & TOR',function(){pair('TOR Reference',v('sc-tor-ref'));pair('ESIA Category',v('sc-category'));h2('Scoping Outcome Summary');body(v('sc-summary'));});
+  ch('1','Introduction',function(){h2('Project Background');body(v('c1-background'));h2('Purpose & Objectives');body(v('c1-purpose'));h2('ESIA Methodology');body(v('c1-methodology'));pair('Area of Influence',v('c1-aoi')?v('c1-aoi')+' km':'');pair('Limitations',v('c1-limitations'));});
+  ch('3','Project Description',function(){pair('Capacity / Scale',v('c3-capacity'));pair('Land Area (ha)',v('c3-area'));pair('Construction Duration',v('c3-constr'));pair('Capital Cost (USD)',v('c3-cost'));h2('Components');body(v('c3-components'));pair('Peak Workers',v('c3-workers'));pair('Local Employment Target',v('c3-local')+'%');});
+  ch('4','Environmental Baseline',function(){pair('Annual Rainfall (mm)',v('c4-rain'));pair('Min/Max Temp (°C)',v('c4-tmin')+'/'+v('c4-tmax'));pair('Dominant Soil Type',v('c4-soil'));pair('Erosion Susceptibility',v('c4-erosion'));h2('Geology');body(v('c4-geology'));pair('Nearest River',v('c4-river'));pair('Flood Risk',v('c4-flood'));pair('Dominant Vegetation',v('c4-veg'));pair('Nearest Protected Area',v('c4-pa'));body(v('c4-sensitive'));});
+  ch('5','Social Baseline',function(){pair('Current Land Use',v('c5-landuse'));pair('Land Tenure',v('c5-tenure'));pair('Physically Displaced HH',v('c5-phys'));pair('Economically Displaced HH',v('c5-econ'));pair('Avg Monthly Income',v('c5-income'));pair('Primary Livelihood',v('c5-livelihood'));});
+  ch('6','Alternatives',function(){h2('Rationale for Selected Option');body(v('c6-rationale'));h2('Technology Alternatives');body(v('c6-tech'));});
+  ch('9','Cumulative Impacts',function(){body(v('c9-hydro'));body(v('c9-bio'));body(v('c9-soc'));h2('Conclusion');body(v('c9-conclusion'));});
+  ch('10','Stakeholder Engagement',function(){h2('GRM');body(v('c10-grm'));pair('GRM Focal Point',v('c10-grm-name'));pair('GRM Contact',v('c10-grm-contact'));});
+  ch('11','ESMP',function(){pair('E&S Manager',v('c11-esm'));pair('Reporting Frequency',v('c11-report'));});
+  ch('12','Emergency Response',function(){body(v('c12-erp'));pair('Emergency Coordinator',v('c12-coord'));pair('Emergency Contact',v('c12-contact'));});
+  ch('13','Conclusion',function(){pair('Feasibility Outcome',v('c13-outcome'));h2('Formal Conclusion Statement');body(v('c13-conclusion'));h2('Recommendations');body(v('c13-recs'));});
   h1('Declaration & Signatures');
   pair('Team Leader',v('sig-tl-name'));pair('Registration No.',v('sig-tl-reg'));pair('Date',v('sig-tl-date'));
   pair('Proponent Representative',v('sig-pr-name'));pair('Title',v('sig-pr-title'));
   pair('Independent Monitor',v('sig-im-name'));pair('Organisation',v('sig-im-org'));
-
   // Contact page
   doc.addPage();pg++;
   doc.setFillColor(15,23,42);doc.rect(0,0,PW,297,'F');
   doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);doc.text('Arnorex ESIA Pro',PW/2,60,{align:'center'});
   doc.setFontSize(9);doc.setTextColor(14,165,233);doc.text('PREPARED BY ARNOLD ELIKUNDA',PW/2,73,{align:'center'});
-  ['📧  arnoldelikunda@gmail.com','📞  +255 773 223 565','📞  +255 743 073 565','💼  linkedin.com/in/arnoldelikunda','𝕏   @Arnold_Elikunda','📸  Instagram: @Arnold_Elikunda','💬  WhatsApp: +255 773 223 565'].forEach(function(c,i){
-    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(160,200,230);doc.text(c,PW/2,92+i*12,{align:'center'});
-  });
+  ['📧  arnoldelikunda@gmail.com','📞  +255 773 223 565','📞  +255 743 073 565','💼  linkedin.com/in/arnoldelikunda','𝕏   @Arnold_Elikunda','📸  Instagram: @Arnold_Elikunda','💬  WhatsApp: +255 773 223 565'].forEach(function(c,i){doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(160,200,230);doc.text(c,PW/2,92+i*12,{align:'center'});});
   addFtr();
   doc.save((pn.replace(/\s+/g,'_')||'ESIA_Report')+'_'+new Date().toISOString().slice(0,10)+'.pdf');
   toast('✓ PDF report generated!');
@@ -1824,57 +2275,53 @@ function exportPDF() {
 // ── WORD EXPORT ──
 async function exportWord() {
   if (!window.docx) { toast('⚠ Word library loading — retry', true); return; }
-  REPORTS_GENERATED++; saveAll();
+  REPORTS_GENERATED++;
   toast('⏳ Building Word document...');
   await new Promise(function(r){ setTimeout(r, 80); });
   try {
     var {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,PageNumber,Footer,Header} = docx;
     function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
-    var ch = [];
-    function h1p(t){ return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:360,after:120},children:[new TextRun({text:t,bold:true,size:28,font:'Calibri',color:'0f172a'})]}); }
-    function h2p(t){ return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:200,after:80},children:[new TextRun({text:t,bold:true,size:22,font:'Calibri',color:'1e3a8a'})]}); }
-    function bp(t){ if(!t) return null; return new Paragraph({spacing:{before:60,after:100},children:[new TextRun({text:t,size:20,font:'Calibri'})]}); }
-    function lp(l){ return new Paragraph({spacing:{before:100,after:30},children:[new TextRun({text:l,bold:true,size:18,font:'Calibri',color:'1e40af'})]}); }
-    function sp(){ return new Paragraph({children:[new TextRun({text:'',size:18})],spacing:{before:60,after:60}}); }
-    function add(p){ if(p) ch.push(p); }
-    function addPair(l,vl){ if(!vl) return; add(lp(l)); add(bp(vl)); }
-    function chap(n,t,fn){ add(sp());add(h1p('Chapter '+n+': '+t));fn();add(sp()); }
-
+    var ch=[];
+    function h1p(t){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:360,after:120},children:[new TextRun({text:t,bold:true,size:28,font:'Calibri',color:'0f172a'})]});}
+    function h2p(t){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:200,after:80},children:[new TextRun({text:t,bold:true,size:22,font:'Calibri',color:'1e3a8a'})]});}
+    function bp(t){if(!t)return null;return new Paragraph({spacing:{before:60,after:100},children:[new TextRun({text:t,size:20,font:'Calibri'})]});}
+    function lp(l){return new Paragraph({spacing:{before:100,after:30},children:[new TextRun({text:l,bold:true,size:18,font:'Calibri',color:'1e40af'})]});}
+    function sp(){return new Paragraph({children:[new TextRun({text:'',size:18})],spacing:{before:60,after:60}});}
+    function add(p){if(p)ch.push(p);}
+    function addPair(l,vl){if(!vl)return;add(lp(l));add(bp(vl));}
+    function chap(n,t,fn){add(sp());add(h1p('Chapter '+n+': '+t));fn();add(sp());}
     add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:160},children:[new TextRun({text:'ARNOREX ESIA PRO',bold:true,size:16,font:'Calibri',color:'0ea5e9'})]}));
     add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:100},children:[new TextRun({text:'Environmental & Social Impact Assessment',bold:true,size:36,font:'Calibri'})]}));
     var pn=v('cv-proj-name')||'ESIA Report';
     add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:60,after:60},children:[new TextRun({text:pn,size:26,font:'Calibri',color:'1e3a8a'})]}));
-    var cl=v('cv-client-f');if(cl) add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:200},children:[new TextRun({text:cl,size:20,font:'Calibri',color:'64748b'})]}));
-
-    chap('0','Scoping & Terms of Reference',function(){ addPair('TOR Reference',v('sc-tor-ref'));addPair('ESIA Category',v('sc-category'));add(h2p('Scoping Outcome Summary'));add(bp(v('sc-summary'))); });
-    chap('1','Introduction',function(){ add(h2p('Project Background'));add(bp(v('c1-background')));add(h2p('Purpose & Objectives'));add(bp(v('c1-purpose')));add(h2p('ESIA Methodology'));add(bp(v('c1-methodology')));addPair('Limitations',v('c1-limitations')); });
-    chap('3','Project Description',function(){ addPair('Capacity / Scale',v('c3-capacity'));addPair('Land Area (ha)',v('c3-area'));addPair('Capital Cost (USD)',v('c3-cost'));add(h2p('Components'));add(bp(v('c3-components')));addPair('Peak Workers',v('c3-workers')); });
-    chap('4','Environmental Baseline',function(){ addPair('Annual Rainfall (mm)',v('c4-rain'));addPair('Dominant Soil Type',v('c4-soil'));add(h2p('Geology'));add(bp(v('c4-geology')));addPair('Nearest River',v('c4-river'));addPair('Dominant Vegetation',v('c4-veg'));add(bp(v('c4-sensitive'))); });
-    chap('5','Social Baseline',function(){ addPair('Current Land Use',v('c5-landuse'));addPair('Land Tenure',v('c5-tenure'));addPair('Physically Displaced HH',v('c5-phys'));addPair('Avg Monthly Income',v('c5-income')); });
-    chap('6','Alternatives',function(){ add(h2p('Rationale'));add(bp(v('c6-rationale')));add(h2p('Technology Alternatives'));add(bp(v('c6-tech'))); });
-    chap('9','Cumulative Impacts',function(){ add(bp(v('c9-hydro')));add(bp(v('c9-bio')));add(bp(v('c9-soc')));add(h2p('Conclusion'));add(bp(v('c9-conclusion'))); });
-    chap('10','Stakeholder Engagement',function(){ add(h2p('GRM'));add(bp(v('c10-grm')));addPair('GRM Contact',v('c10-grm-contact')); });
-    chap('11','ESMP',function(){ addPair('E&S Manager',v('c11-esm'));addPair('Reporting Frequency',v('c11-report')); });
-    chap('12','Emergency Response',function(){ add(bp(v('c12-erp')));addPair('Emergency Coordinator',v('c12-coord')); });
-    chap('13','Conclusion',function(){ addPair('Feasibility Outcome',v('c13-outcome'));add(h2p('Formal Conclusion'));add(bp(v('c13-conclusion')));add(h2p('Recommendations'));add(bp(v('c13-recs'))); });
+    var cl=v('cv-client-f');if(cl)add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:200},children:[new TextRun({text:cl,size:20,font:'Calibri',color:'64748b'})]}));
+    chap('0','Scoping',function(){addPair('TOR Reference',v('sc-tor-ref'));addPair('ESIA Category',v('sc-category'));add(h2p('Scoping Outcome Summary'));add(bp(v('sc-summary')));});
+    chap('1','Introduction',function(){add(h2p('Background'));add(bp(v('c1-background')));add(h2p('Purpose'));add(bp(v('c1-purpose')));add(h2p('Methodology'));add(bp(v('c1-methodology')));addPair('Limitations',v('c1-limitations'));});
+    chap('3','Project Description',function(){addPair('Capacity',v('c3-capacity'));addPair('Land Area (ha)',v('c3-area'));addPair('Capital Cost (USD)',v('c3-cost'));add(h2p('Components'));add(bp(v('c3-components')));addPair('Peak Workers',v('c3-workers'));});
+    chap('4','Environmental Baseline',function(){addPair('Annual Rainfall (mm)',v('c4-rain'));addPair('Dominant Soil Type',v('c4-soil'));add(h2p('Geology'));add(bp(v('c4-geology')));addPair('Nearest River',v('c4-river'));addPair('Dominant Vegetation',v('c4-veg'));add(bp(v('c4-sensitive')));});
+    chap('5','Social Baseline',function(){addPair('Land Use',v('c5-landuse'));addPair('Land Tenure',v('c5-tenure'));addPair('Displaced HH',v('c5-phys'));addPair('Income',v('c5-income'));});
+    chap('6','Alternatives',function(){add(h2p('Rationale'));add(bp(v('c6-rationale')));add(h2p('Technology'));add(bp(v('c6-tech')));});
+    chap('9','Cumulative Impacts',function(){add(bp(v('c9-hydro')));add(bp(v('c9-bio')));add(bp(v('c9-soc')));add(h2p('Conclusion'));add(bp(v('c9-conclusion')));});
+    chap('10','Stakeholder Engagement',function(){add(h2p('GRM'));add(bp(v('c10-grm')));addPair('GRM Contact',v('c10-grm-contact'));});
+    chap('11','ESMP',function(){addPair('E&S Manager',v('c11-esm'));addPair('Reporting Frequency',v('c11-report'));});
+    chap('12','Emergency Response',function(){add(bp(v('c12-erp')));addPair('Emergency Coordinator',v('c12-coord'));});
+    chap('13','Conclusion',function(){addPair('Feasibility Outcome',v('c13-outcome'));add(h2p('Formal Conclusion'));add(bp(v('c13-conclusion')));add(h2p('Recommendations'));add(bp(v('c13-recs')));});
     add(sp());add(h1p('Declaration & Signatures'));
     addPair('Team Leader',v('sig-tl-name'));addPair('Proponent Representative',v('sig-pr-name'));
-    add(sp()); add(bp('Arnorex ESIA Pro | arnoldelikunda@gmail.com | +255 773 223 565 | linkedin.com/in/arnoldelikunda | @Arnold_Elikunda'));
-
-    var ftr = new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Arnorex ESIA Pro  |  Page ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.CURRENT],size:16,color:'888888',font:'Calibri'}),new TextRun({text:' of ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.TOTAL_PAGES],size:16,color:'888888',font:'Calibri'})]})]});
-    var hdr = new Header({children:[new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:2,color:'e2e8f0',space:1}},spacing:{after:100},children:[new TextRun({text:(pn)+' — Environmental & Social Impact Assessment',size:16,color:'94a3b8',font:'Calibri'})]})]});
-
-    var wordDoc = new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1200,right:1100,bottom:1200,left:1100}}},headers:{default:hdr},footers:{default:ftr},children:ch.filter(Boolean)}]});
-    var blob = await Packer.toBlob(wordDoc);
-    var a = document.createElement('a'); a.href=URL.createObjectURL(blob);
+    add(sp());add(bp('Arnorex ESIA Pro | arnoldelikunda@gmail.com | +255 773 223 565 | linkedin.com/in/arnoldelikunda | @Arnold_Elikunda'));
+    var ftr=new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Arnorex ESIA Pro  |  Page ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.CURRENT],size:16,color:'888888',font:'Calibri'}),new TextRun({text:' of ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.TOTAL_PAGES],size:16,color:'888888',font:'Calibri'})]})]});
+    var hdr=new Header({children:[new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:2,color:'e2e8f0',space:1}},spacing:{after:100},children:[new TextRun({text:pn+' — Environmental & Social Impact Assessment',size:16,color:'94a3b8',font:'Calibri'})]})]});
+    var wordDoc=new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1200,right:1100,bottom:1200,left:1100}}},headers:{default:hdr},footers:{default:ftr},children:ch.filter(Boolean)}]});
+    var blob=await Packer.toBlob(wordDoc);
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
     a.download=(pn.replace(/\s+/g,'_')||'ESIA')+'_'+new Date().toISOString().slice(0,10)+'.docx';
     a.click();
     toast('✓ Word document exported!');
-  } catch(err) { console.error(err); toast('✕ Word export failed: '+err.message, true); }
+  } catch(err){console.error(err);toast('✕ Word export failed: '+err.message,true);}
 }
 
-// ── INPUT LISTENERS ──
-document.addEventListener('input', function(){ scheduleSave(); });
+// ── INPUT LISTENERS (trigger debounced cloud save) ──
+document.addEventListener('input',  function(){ scheduleSave(); });
 document.addEventListener('change', function(){ scheduleSave(); });
 
 // ── RESIZE ──
@@ -1903,16 +2350,12 @@ window.addEventListener('DOMContentLoaded', function() {
   var df = document.getElementById('cv-date-f');
   if (df) df.value = today;
 
-  var restored = loadAll();
-  buildDashboard();
-  goScreen('dashboard');
-
-  if (restored && PROJECTS.length > 0) {
-    toast('✓ ' + PROJECTS.length + ' project(s) restored');
-  } else {
-    toast('Welcome to Arnorex ESIA Pro!');
-  }
+  // Signal to Firebase onAuthStateChanged that the app DOM is ready
+  // loadUserProjects() will be called by onAuthStateChanged after login
+  window._appReady = true;
+  buildDashboard(); // Empty state before login
 });
 </script>
+
 </body>
-  </html>
+       </html>
