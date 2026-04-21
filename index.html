@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+   <head>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhI8wSYTvl-BpgoWclUs5fz6c8Lxqyfww",
+            authDomain: "arnorex-esia-pro.firebaseapp.com",
+            projectId: "arnorex-esia-pro",
+            storageBucket: "arnorex-esia-pro.firebasestorage.app",
+            messagingSenderId: "372225941309",
+            appId: "1:372225941309:web:5b03df354f70babd9a6f54"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        window.db = getFirestore(app);
+        window.auth = getAuth(app);
+        window.currentProjectId = null; // This is the 'Mirror Killer'
+        
+        console.log("Arnorex Cloud Ready 🦾");
+    </script>
+</head>
+
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Arnorex ESIA Pro</title>
