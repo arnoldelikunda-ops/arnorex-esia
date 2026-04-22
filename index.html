@@ -411,35 +411,76 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
   table.t td input,table.t td select{border:none;background:transparent;}
 }
 
-/* ─── AUTH SCREEN ─── */
-#auth-screen{
-  position:fixed;inset:0;background:var(--ink);z-index:999;
-  display:flex;align-items:center;justify-content:center;padding:16px;
-}
-.auth-card{
-  background:var(--surface);border-radius:16px;padding:36px;
-  max-width:420px;width:100%;box-shadow:var(--shadow-lg);
-}
-.auth-logo{text-align:center;margin-bottom:28px;}
-.auth-logo-mark{font-family:'Fraunces',serif;font-size:22px;font-weight:800;color:var(--ink);display:inline-flex;align-items:center;gap:8px;}
-.auth-logo-mark .dot{width:9px;height:9px;background:var(--cyan);border-radius:50%;}
-.auth-logo-sub{font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:4px;}
-.auth-tabs{display:flex;gap:0;background:var(--bg);border-radius:var(--radius-sm);padding:3px;margin-bottom:24px;}
-.auth-tab{flex:1;padding:8px;border:none;border-radius:6px;background:transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;}
+/* ─── AUTH SCREEN — TWO-PANEL DESIGN ─── */
+#auth-screen{position:fixed;inset:0;z-index:999;display:flex;align-items:stretch;}
+.auth-left{flex:1.1;background:linear-gradient(160deg,#0f172a 0%,#0c2340 60%,#0a1f38 100%);display:flex;align-items:center;justify-content:center;padding:48px 40px;border-right:1px solid rgba(14,165,233,.12);position:relative;overflow:hidden;}
+.auth-left::before{content:'';position:absolute;top:-120px;right:-80px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(14,165,233,.08) 0%,transparent 70%);pointer-events:none;}
+.auth-left::after{content:'';position:absolute;bottom:-80px;left:-40px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.06) 0%,transparent 70%);pointer-events:none;}
+.auth-left-inner{max-width:440px;position:relative;z-index:1;}
+.al-logo{display:flex;align-items:center;gap:10px;margin-bottom:36px;}
+.al-logo-dot{width:10px;height:10px;background:var(--cyan);border-radius:50%;box-shadow:0 0 16px rgba(14,165,233,.5);}
+.al-logo span{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:rgba(255,255,255,.85);}
+.al-headline{font-family:'Fraunces',serif;font-size:42px;font-weight:800;color:#fff;line-height:1.1;margin-bottom:16px;letter-spacing:-.5px;}
+.al-sub{font-size:14px;color:rgba(255,255,255,.45);line-height:1.7;margin-bottom:36px;max-width:360px;}
+.al-features{display:flex;flex-direction:column;gap:12px;margin-bottom:36px;}
+.al-feat{display:flex;align-items:flex-start;gap:14px;padding:13px 16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:10px;transition:.15s;}
+.al-feat:hover{background:rgba(255,255,255,.06);border-color:rgba(14,165,233,.15);}
+.al-feat-icon{font-size:19px;flex-shrink:0;margin-top:1px;}
+.al-feat strong{display:block;font-size:12.5px;color:rgba(255,255,255,.85);margin-bottom:2px;}
+.al-feat div{font-size:11px;color:rgba(255,255,255,.38);line-height:1.5;}
+.al-contact{border-top:1px solid rgba(255,255,255,.08);padding-top:20px;}
+.al-contact-title{font-size:9.5px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.22);margin-bottom:6px;}
+.al-contact-name{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:rgba(255,255,255,.65);margin-bottom:12px;}
+.al-contact-links{display:flex;flex-direction:column;gap:5px;}
+.al-link{font-size:11.5px;color:rgba(255,255,255,.38);text-decoration:none;transition:.15s;display:flex;align-items:center;gap:7px;}
+.al-link:hover{color:var(--cyan);}
+/* Right form panel */
+.auth-right{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 28px;background:var(--bg);overflow-y:auto;}
+.auth-card{background:var(--surface);border-radius:16px;padding:36px 32px;max-width:420px;width:100%;box-shadow:var(--shadow-lg);border:1px solid var(--border);}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:26px;}
+.auth-logo-icon{font-size:28px;}
+.auth-logo-mark{font-family:'Fraunces',serif;font-size:18px;font-weight:800;color:var(--ink);}
+.auth-logo-mark span{color:var(--cyan);}
+.auth-logo-sub{font-size:10px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase;margin-top:2px;}
+.auth-tabs{display:flex;background:var(--bg);border-radius:9px;padding:3px;margin-bottom:22px;border:1px solid var(--border);}
+.auth-tab{flex:1;padding:9px;border:none;border-radius:7px;background:transparent;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;transition:.15s;}
 .auth-tab.active{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);}
 .auth-form{display:flex;flex-direction:column;gap:14px;}
-.auth-form .field label{font-size:11px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.2px;}
-.auth-form .field input{background:var(--bg);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:10px 13px;color:var(--ink);font-family:'Outfit',sans-serif;font-size:13.5px;width:100%;transition:.15s;}
-.auth-form .field input:focus{outline:none;border-color:var(--cyan);background:var(--surface);box-shadow:0 0 0 3px var(--cyan-dim);}
-.auth-submit{width:100%;padding:12px;border:none;border-radius:var(--radius-sm);background:var(--ink);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;margin-top:4px;}
-.auth-submit:hover{background:var(--ink2);}
-.auth-error{font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:var(--radius-sm);padding:10px 13px;display:none;}
+.auth-field{display:flex;flex-direction:column;gap:5px;}
+.auth-field label{font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:.3px;}
+.auth-input-wrap{position:relative;display:flex;align-items:center;}
+.auth-input-icon{position:absolute;left:12px;font-size:14px;pointer-events:none;line-height:1;}
+.auth-input-wrap input{width:100%;background:var(--bg);border:1.5px solid var(--border);border-radius:9px;padding:11px 13px 11px 38px;color:var(--ink);font-family:'Outfit',sans-serif;font-size:13.5px;transition:.15s;}
+.auth-input-wrap input:focus{outline:none;border-color:var(--cyan);background:var(--surface);box-shadow:0 0 0 3px var(--cyan-dim);}
+.auth-link-sm{font-size:11.5px;color:var(--cyan);cursor:pointer;font-weight:600;}
+.auth-submit{width:100%;padding:13px;border:none;border-radius:9px;background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:2px;box-shadow:0 4px 12px rgba(15,23,42,.25);}
+.auth-submit:hover{background:linear-gradient(135deg,#1e293b,#334155);transform:translateY(-1px);box-shadow:0 6px 18px rgba(15,23,42,.3);}
+.auth-submit:disabled{opacity:.55;transform:none;cursor:not-allowed;}
+.auth-btn-arrow{font-size:16px;transition:.2s;}
+.auth-submit:hover .auth-btn-arrow{transform:translateX(3px);}
+.auth-error{font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:10px 13px;display:none;}
 .auth-error.show{display:block;}
-.auth-footer{text-align:center;margin-top:14px;font-size:12px;color:var(--muted);}
-.auth-footer a{color:var(--cyan);cursor:pointer;font-weight:600;}
-.auth-divider{text-align:center;color:var(--muted);font-size:12px;margin:6px 0;position:relative;}
-.auth-divider::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--border);}
-.auth-divider span{background:var(--surface);padding:0 10px;position:relative;}
+.auth-success{font-size:12px;color:var(--green);background:var(--green-dim);border:1px solid rgba(16,185,129,.2);border-radius:8px;padding:10px 13px;display:none;}
+.auth-success.show{display:block;}
+.auth-switch-text{text-align:center;font-size:12.5px;color:var(--muted);}
+.auth-switch-text a{color:var(--cyan);cursor:pointer;font-weight:600;}
+.auth-bottom-note{text-align:center;margin-top:18px;font-size:11px;color:var(--muted);padding-top:14px;border-top:1px solid var(--border);line-height:1.6;}
+@media(max-width:768px){
+  .auth-left{display:none;}
+  .auth-right{background:var(--ink);padding:24px 16px;}
+  .auth-card{background:rgba(30,41,59,.9);border-color:rgba(255,255,255,.08);}
+  .auth-card .auth-logo-mark{color:#fff;}
+  .auth-field label{color:rgba(255,255,255,.55);}
+  .auth-input-wrap input{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;}
+  .auth-input-wrap input::placeholder{color:rgba(255,255,255,.3);}
+  .auth-input-wrap input:focus{background:rgba(255,255,255,.1);}
+  .auth-tabs{background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.08);}
+  .auth-tab.active{background:rgba(255,255,255,.12);color:#fff;}
+  .auth-tab{color:rgba(255,255,255,.4);}
+  .auth-switch-text,.auth-bottom-note{color:rgba(255,255,255,.35);}
+  .auth-bottom-note{border-color:rgba(255,255,255,.08);}
+  .auth-logo-sub{color:rgba(255,255,255,.35);}
+}
 
 /* ─── APP ROOT WRAPPER ─── */
 #app-root{display:none;flex-direction:column;min-height:100vh;}
@@ -466,43 +507,133 @@ table.t td input:focus,table.t td select:focus{outline:none;background:var(--cya
 
 <!-- ═══ AUTH SCREEN ═══ -->
 <div id="auth-screen" style="display:flex">
-  <div class="auth-card">
-    <div class="auth-logo">
-      <div class="auth-logo-mark"><div class="dot"></div>Arnorex ESIA Pro</div>
-      <div class="auth-logo-sub">Professional Assessment Platform</div>
+  <!-- Left panel — branding -->
+  <div class="auth-left">
+    <div class="auth-left-inner">
+      <div class="al-logo">
+        <div class="al-logo-dot"></div>
+        <span>Arnorex ESIA Pro</span>
+      </div>
+      <div class="al-headline">
+        Professional<br>ESIA Platform
+      </div>
+      <div class="al-sub">Built for environmental consultants, researchers, and organisations working to international standards.</div>
+      <div class="al-features">
+        <div class="al-feat"><div class="al-feat-icon">🌿</div><div><strong>NEMC Compliant</strong><br>Tanzania EMA 2004 &amp; NEMC standards built-in</div></div>
+        <div class="al-feat"><div class="al-feat-icon">☁️</div><div><strong>Cloud-Saved</strong><br>Your projects sync across all devices instantly</div></div>
+        <div class="al-feat"><div class="al-feat-icon">📄</div><div><strong>Report Generator</strong><br>One-click export to PDF and Word</div></div>
+        <div class="al-feat"><div class="al-feat-icon">🤖</div><div><strong>Smart Suggestions</strong><br>AI-guided impact identification per project type</div></div>
+      </div>
+      <div class="al-contact">
+        <div class="al-contact-title">Built &amp; maintained by</div>
+        <div class="al-contact-name">Arnold Elikunda</div>
+        <div class="al-contact-links">
+          <a href="mailto:arnoldelikunda@gmail.com" class="al-link">✉ arnoldelikunda@gmail.com</a>
+          <a href="tel:+255773223565" class="al-link">📞 +255 773 223 565</a>
+          <a href="https://linkedin.com/in/arnoldelikunda" target="_blank" class="al-link">💼 linkedin.com/in/arnoldelikunda</a>
+          <a href="https://x.com/Arnold_Elikunda" target="_blank" class="al-link">𝕏 @Arnold_Elikunda</a>
+          <a href="https://wa.me/255773223565" target="_blank" class="al-link">💬 WhatsApp: +255 773 223 565</a>
+        </div>
+      </div>
     </div>
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
-    </div>
-    <!-- LOGIN FORM -->
-    <div id="form-login" class="auth-form">
-      <div id="login-error" class="auth-error"></div>
-      <div class="field"><label>Email Address</label><input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/></div>
-      <div class="field"><label>Password</label><input type="password" id="login-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/></div>
-      <button class="auth-submit" onclick="doLogin()">Sign In to Arnorex</button>
-      <div class="auth-divider"><span>or</span></div>
-      <div class="auth-footer"><a onclick="switchAuthTab('reset')">Forgot password?</a></div>
-    </div>
-    <!-- SIGNUP FORM -->
-    <div id="form-signup" class="auth-form" style="display:none">
-      <div id="signup-error" class="auth-error"></div>
-      <div class="field"><label>Full Name</label><input type="text" id="signup-name" placeholder="Arnold Elikunda" autocomplete="name"/></div>
-      <div class="field"><label>Email Address</label><input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/></div>
-      <div class="field"><label>Password</label><input type="password" id="signup-pass" placeholder="Min. 6 characters" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"/></div>
-      <button class="auth-submit" onclick="doSignup()">Create Account</button>
-    </div>
-    <!-- RESET FORM -->
-    <div id="form-reset" class="auth-form" style="display:none">
-      <div id="reset-error" class="auth-error"></div>
-      <div id="reset-success" class="auth-error" style="background:var(--green-dim);border-color:rgba(16,185,129,.2);color:var(--green)"></div>
-      <div class="field"><label>Email Address</label><input type="email" id="reset-email" placeholder="you@example.com"/></div>
-      <button class="auth-submit" onclick="doReset()">Send Reset Email</button>
-      <div class="auth-footer"><a onclick="switchAuthTab('login')">← Back to sign in</a></div>
-    </div>
-    <div class="auth-footer" style="margin-top:20px;font-size:11px;color:var(--muted)">
-      By signing in you agree to use this tool responsibly for professional ESIA work.<br>
-      <strong style="color:var(--ink)">arnoldelikunda@gmail.com</strong> · +255 773 223 565
+  </div>
+
+  <!-- Right panel — forms -->
+  <div class="auth-right">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-icon">🌿</div>
+        <div>
+          <div class="auth-logo-mark">Arnorex <span>ESIA Pro</span></div>
+          <div class="auth-logo-sub">Professional Assessment Platform</div>
+        </div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="form-login" class="auth-form">
+        <div id="login-error" class="auth-error"></div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">✉</span>
+            <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">🔒</span>
+            <input type="password" id="login-pass" placeholder="Your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
+        </div>
+        <div style="text-align:right;margin-top:-6px;margin-bottom:4px">
+          <a class="auth-link-sm" onclick="switchAuthTab('reset')">Forgot password?</a>
+        </div>
+        <button class="auth-submit" id="login-btn" onclick="doLogin()">
+          <span>Sign In</span>
+          <span class="auth-btn-arrow">→</span>
+        </button>
+        <div class="auth-switch-text">Don't have an account? <a onclick="switchAuthTab('signup')">Create one free</a></div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="form-signup" class="auth-form" style="display:none">
+        <div id="signup-error" class="auth-error"></div>
+        <div class="auth-field">
+          <label>Full Name</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">👤</span>
+            <input type="text" id="signup-name" placeholder="e.g. Arnold Elikunda" autocomplete="name"/>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">✉</span>
+            <input type="email" id="signup-email" placeholder="you@example.com" autocomplete="email"/>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Password <span style="color:var(--muted);font-weight:400;text-transform:none">(min. 6 characters)</span></label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">🔒</span>
+            <input type="password" id="signup-pass" placeholder="Choose a strong password" autocomplete="new-password" onkeydown="if(event.key==='Enter')doSignup()"/>
+          </div>
+        </div>
+        <button class="auth-submit" id="signup-btn" onclick="doSignup()">
+          <span>Create Account</span>
+          <span class="auth-btn-arrow">→</span>
+        </button>
+        <div class="auth-switch-text">Already have an account? <a onclick="switchAuthTab('login')">Sign in</a></div>
+      </div>
+
+      <!-- RESET -->
+      <div id="form-reset" class="auth-form" style="display:none">
+        <div id="reset-error" class="auth-error"></div>
+        <div id="reset-success" class="auth-success"></div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6">Enter your email address and we'll send you a link to reset your password.</div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <div class="auth-input-wrap">
+            <span class="auth-input-icon">✉</span>
+            <input type="email" id="reset-email" placeholder="you@example.com"/>
+          </div>
+        </div>
+        <button class="auth-submit" onclick="doReset()">
+          <span>Send Reset Email</span>
+          <span class="auth-btn-arrow">→</span>
+        </button>
+        <div class="auth-switch-text"><a onclick="switchAuthTab('login')">← Back to sign in</a></div>
+      </div>
+
+      <div class="auth-bottom-note">
+        By signing in you agree to use this tool responsibly for professional ESIA work.
+      </div>
     </div>
   </div>
 </div>
@@ -2213,8 +2344,1038 @@ function toast(msg, isErr) {
   t._t = setTimeout(function(){ t.className = ''; }, 3200);
 }
 
-// ── PDF EXPORT ──
+// ══════════════════════════════════════════════════════════════
+//  PDF EXPORT — DYNAMIC LAYOUT ENGINE
+//  Full vertical tracker (yPos), auto page-break, text wrapping
+//  NEMC-ready professional formatting
+// ══════════════════════════════════════════════════════════════
 function exportPDF() {
+  if (!window.jspdf) { toast('⚠ PDF library loading — retry in a moment', true); return; }
+  REPORTS_GENERATED++;
+
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  // ── CONSTANTS ──
+  var PW  = 210;   // Page width
+  var PH  = 297;   // Page height
+  var ML  = 18;    // Left margin
+  var MR  = 18;    // Right margin
+  var MT  = 22;    // Top margin (after header)
+  var MB  = 22;    // Bottom margin (before footer)
+  var CW  = PW - ML - MR;   // Content width
+  var BOTTOM_LIMIT = PH - MB - 10;
+  var pageNum = 1;
+
+  // ── VERTICAL TRACKER ──
+  var yPos = MT;
+
+  // ── HELPER: get field value ──
+  function v(id) {
+    var e = document.getElementById(id);
+    return e ? (e.value || '').trim() : '';
+  }
+
+  // ── HELPER: check page break & add new page if needed ──
+  function checkPage(needed) {
+    needed = needed || 12;
+    if (yPos + needed > BOTTOM_LIMIT) {
+      addPageFooter();
+      doc.addPage();
+      pageNum++;
+      yPos = MT;
+      addPageHeader();
+    }
+  }
+
+  // ── PAGE HEADER (all content pages) ──
+  function addPageHeader() {
+    var projName = v('cv-proj-name') || 'ESIA Report';
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    doc.text(projName + '  —  Environmental & Social Impact Assessment', ML, 12);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.line(ML, 14, PW - MR, 14);
+    yPos = MT;
+  }
+
+  // ── PAGE FOOTER (all content pages) ──
+  function addPageFooter() {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+    var footerText = 'Arnorex ESIA Pro  |  arnoldelikunda@gmail.com  |  +255 773 223 565  |  Page ' + pageNum;
+    doc.text(footerText, PW / 2, PH - 8, { align: 'center' });
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.25);
+    doc.line(ML, PH - 12, PW - MR, PH - 12);
+  }
+
+  // ── CHAPTER HEADING (H1) ──
+  function sectionH1(text) {
+    checkPage(18);
+    // Background pill
+    doc.setFillColor(15, 23, 42);
+    doc.roundedRect(ML, yPos - 4, CW, 12, 2, 2, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text(text, ML + 5, yPos + 4.5);
+    // Cyan accent left border
+    doc.setFillColor(14, 165, 233);
+    doc.rect(ML, yPos - 4, 3, 12, 'F');
+    yPos += 17;
+  }
+
+  // ── SECTION HEADING (H2) ──
+  function sectionH2(text) {
+    checkPage(12);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 58, 138);
+    doc.text(text, ML, yPos);
+    yPos += 2;
+    doc.setDrawColor(191, 219, 254);
+    doc.setLineWidth(0.3);
+    doc.line(ML, yPos, ML + CW * 0.4, yPos);
+    yPos += 6;
+  }
+
+  // ── BODY TEXT — fully wrapped, multi-paragraph ──
+  function bodyText(text) {
+    if (!text || text.trim() === '') return;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.5);
+    doc.setTextColor(30, 41, 59);
+    // Split on newlines first to preserve paragraphs
+    var paragraphs = text.split('\n');
+    paragraphs.forEach(function(para) {
+      para = para.trim();
+      if (!para) { yPos += 3; return; }
+      var lines = doc.splitTextToSize(para, CW);
+      lines.forEach(function(line) {
+        checkPage(6);
+        doc.text(line, ML, yPos);
+        yPos += 5.5;
+      });
+      yPos += 2; // Paragraph gap
+    });
+    yPos += 2;
+  }
+
+  // ── KEY-VALUE PAIR — label + wrapped value ──
+  function kvPair(label, value) {
+    if (!value || value.trim() === '') return;
+    checkPage(10);
+    var labelW = 52;
+    var valueW = CW - labelW - 3;
+    // Label
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(71, 85, 105);
+    doc.text(label.toUpperCase(), ML, yPos);
+    // Value — wrapped
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(15, 23, 42);
+    var valueLines = doc.splitTextToSize(value, valueW);
+    var lineH = 5;
+    valueLines.forEach(function(line, i) {
+      if (i > 0) checkPage(lineH);
+      doc.text(line, ML + labelW, yPos);
+      if (i < valueLines.length - 1) yPos += lineH;
+    });
+    yPos += 7;
+  }
+
+  // ── DIVIDER LINE ──
+  function divider() {
+    checkPage(8);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.25);
+    doc.line(ML, yPos, PW - MR, yPos);
+    yPos += 6;
+  }
+
+  // ── SPACER ──
+  function spacer(mm) { yPos += (mm || 5); }
+
+  // ── INFO BOX (shaded panel for key metrics) ──
+  function infoBox(pairs) {
+    var filledPairs = pairs.filter(function(p) { return p[1] && p[1].trim(); });
+    if (!filledPairs.length) return;
+    var rowH = 9;
+    var boxH = filledPairs.length * rowH + 8;
+    checkPage(boxH + 4);
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(ML, yPos, CW, boxH, 2, 2, 'FD');
+    var by = yPos + 7;
+    filledPairs.forEach(function(p) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 116, 139);
+      doc.text(p[0].toUpperCase(), ML + 5, by);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 23, 42);
+      var valLines = doc.splitTextToSize(p[1], CW - 60);
+      doc.text(valLines[0] || '', ML + 52, by);
+      by += rowH;
+    });
+    yPos += boxH + 5;
+  }
+
+  // ── SIGNATURE BLOCK ──
+  function sigBlock(role, name, extra, date) {
+    if (!name) return;
+    checkPage(28);
+    doc.setFillColor(248, 250, 252);
+    doc.setDrawColor(226, 232, 240);
+    doc.roundedRect(ML, yPos, CW, 24, 2, 2, 'FD');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(71, 85, 105);
+    doc.text(role.toUpperCase(), ML + 5, yPos + 7);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(15, 23, 42);
+    doc.text(name, ML + 5, yPos + 14);
+    if (extra) { doc.setFontSize(8); doc.setTextColor(100, 116, 139); doc.text(extra, ML + 5, yPos + 19); }
+    if (date) { doc.setFontSize(8); doc.setTextColor(100, 116, 139); doc.text('Date: ' + date, PW - MR - 40, yPos + 19); }
+    // Signature line
+    doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.4);
+    doc.line(PW - MR - 55, yPos + 21, PW - MR - 5, yPos + 21);
+    doc.setFontSize(7); doc.setTextColor(148, 163, 184);
+    doc.text('Signature', PW - MR - 55, yPos + 24);
+    yPos += 30;
+  }
+
+  // ══════════════════════════════
+  //  COVER PAGE
+  // ══════════════════════════════
+  var projName = v('cv-proj-name') || 'ESIA Report';
+  var client   = v('cv-client-f');
+
+  // Dark background
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, PW, PH, 'F');
+
+  // Cyan accent stripe
+  doc.setFillColor(14, 165, 233);
+  doc.rect(0, 116, PW, 2, 'F');
+
+  // Subtle grid pattern (dots)
+  doc.setFillColor(30, 40, 58);
+  for (var gx = 10; gx < PW; gx += 12) {
+    for (var gy = 10; gy < 115; gy += 12) {
+      doc.circle(gx, gy, 0.4, 'F');
+    }
+  }
+
+  // Logo / badge
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(14, 165, 233);
+  doc.text('ARNOREX ESIA PRO', PW / 2, 36, { align: 'center' });
+  // Small cyan line under brand
+  doc.setDrawColor(14, 165, 233);
+  doc.setLineWidth(0.5);
+  doc.line(PW/2 - 20, 38.5, PW/2 + 20, 38.5);
+
+  // Main title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(24);
+  doc.setTextColor(255, 255, 255);
+  doc.text('Environmental & Social', PW / 2, 58, { align: 'center' });
+  doc.text('Impact Assessment', PW / 2, 70, { align: 'center' });
+
+  // Project name
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(14);
+  doc.setTextColor(148, 202, 240);
+  var projNameLines = doc.splitTextToSize(projName, CW - 20);
+  var pnY = 88;
+  projNameLines.forEach(function(line) {
+    doc.text(line, PW / 2, pnY, { align: 'center' });
+    pnY += 8;
+  });
+
+  // Client
+  if (client) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.setTextColor(100, 150, 180);
+    doc.text(client, PW / 2, pnY + 2, { align: 'center' });
+  }
+
+  // Info card
+  var coverMeta = [
+    ['Location', v('cv-location')],
+    ['Date', v('cv-date-f')],
+    ['Version', v('cv-version')],
+    ['Regulatory Authority', v('cv-authority') || 'NEMC'],
+    ['Reference No.', v('cv-refno')],
+    ['ESIA Stage', v('cv-stage')],
+    ['Financing Standard', v('cv-financing')]
+  ].filter(function(m) { return m[1]; });
+
+  if (coverMeta.length) {
+    var cardTop = 128;
+    var cardRowH = 11;
+    var cardH = Math.ceil(coverMeta.length / 2) * cardRowH + 10;
+    doc.setFillColor(22, 32, 53);
+    doc.setDrawColor(14, 165, 233);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(ML, cardTop, CW, cardH, 3, 3, 'FD');
+    var cx = ML + 6, cy = cardTop + 9;
+    var colW = CW / 2;
+    coverMeta.forEach(function(m, i) {
+      var col = i % 2, row = Math.floor(i / 2);
+      var fx = cx + col * colW;
+      var fy = cy + row * cardRowH;
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(7); doc.setTextColor(14, 165, 233);
+      doc.text(m[0].toUpperCase(), fx, fy);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(240, 244, 248);
+      doc.text(doc.splitTextToSize(m[1], colW - 10)[0], fx, fy + 5);
+    });
+  }
+
+  // Prepared by
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(80, 120, 160);
+  doc.text('Prepared by Arnold Elikunda  |  arnoldelikunda@gmail.com  |  +255 773 223 565', PW/2, PH - 20, { align: 'center' });
+  doc.text('linkedin.com/in/arnoldelikunda  |  @Arnold_Elikunda  |  WhatsApp: +255 773 223 565', PW/2, PH - 14, { align: 'center' });
+
+  // ══════════════════════════════
+  //  TABLE OF CONTENTS PAGE
+  // ══════════════════════════════
+  doc.addPage(); pageNum = 2;
+  // Light background
+  doc.setFillColor(248, 250, 252);
+  doc.rect(0, 0, PW, PH, 'F');
+  addPageHeader();
+
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(15, 23, 42);
+  doc.text('Table of Contents', ML, yPos); yPos += 4;
+  doc.setDrawColor(14, 165, 233); doc.setLineWidth(0.6);
+  doc.line(ML, yPos, ML + 60, yPos); yPos += 10;
+
+  var tocEntries = [
+    ['Chapter 0', 'Scoping & Terms of Reference', 3],
+    ['Chapter 1', 'Introduction', 3],
+    ['Chapter 2', 'Legal Framework', 3],
+    ['Chapter 3', 'Project Description', 4],
+    ['Chapter 4', 'Baseline Environmental Conditions', 4],
+    ['Chapter 5', 'Baseline Social & Economic Conditions', 5],
+    ['Chapter 6', 'Alternatives Analysis', 5],
+    ['Chapter 7', 'Environmental Impact Assessment', 5],
+    ['Chapter 8', 'Social Impact Assessment', 6],
+    ['Chapter 9', 'Cumulative Impact Assessment', 6],
+    ['Chapter 10', 'Stakeholder Engagement', 7],
+    ['Chapter 11', 'Environmental & Social Management Plan (ESMP)', 7],
+    ['Chapter 12', 'Emergency Response & Contingency Plan', 8],
+    ['Chapter 13', 'Conclusion & Recommendations', 8],
+    ['References', 'References & Glossary', 9],
+    ['Signatures', 'Declaration & Signatures', 9]
+  ];
+  tocEntries.forEach(function(entry, i) {
+    checkPage(9);
+    var bg = i % 2 === 0;
+    if (bg) { doc.setFillColor(241, 245, 249); doc.rect(ML, yPos - 4, CW, 8, 'F'); }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(14, 165, 233);
+    doc.text(entry[0], ML + 3, yPos);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
+    doc.text(entry[1], ML + 40, yPos);
+    // Dots + page ref
+    doc.setTextColor(148, 163, 184); doc.setFontSize(8);
+    var dotsX = PW - MR - 10;
+    doc.text('..........', dotsX - 15, yPos);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(30, 41, 59);
+    doc.text(String(entry[2]), PW - MR - 4, yPos, { align: 'right' });
+    yPos += 9;
+  });
+
+  // ══════════════════════════════
+  //  CONTENT PAGES
+  // ══════════════════════════════
+  doc.addPage(); pageNum = 3;
+  doc.setFillColor(255, 255, 255); doc.rect(0, 0, PW, PH, 'F');
+  addPageHeader();
+
+  // ── CHAPTER 0: SCOPING ──
+  sectionH1('Chapter 0: Scoping & Terms of Reference');
+  infoBox([
+    ['TOR Reference', v('sc-tor-ref')],
+    ['Scoping Application Date', v('sc-app-date')],
+    ['TOR Acceptance Date', v('sc-tor-date')],
+    ['ESIA Category', v('sc-category')]
+  ]);
+  if (v('sc-summary')) { sectionH2('Scoping Outcome Summary'); bodyText(v('sc-summary')); }
+  divider();
+
+  // ── CHAPTER 1: INTRODUCTION ──
+  sectionH1('Chapter 1: Introduction');
+  if (v('c1-background')) { sectionH2('1.1 Project Background'); bodyText(v('c1-background')); }
+  if (v('c1-purpose'))    { sectionH2('1.2 Purpose & Objectives'); bodyText(v('c1-purpose')); }
+  if (v('c1-methodology')){ sectionH2('1.3 Assessment Methodology'); bodyText(v('c1-methodology')); }
+  infoBox([
+    ['Area of Influence', v('c1-aoi') ? v('c1-aoi') + ' km radius' : ''],
+    ['Study Area', v('c1-study-area')],
+    ['Field Survey Start', v('c1-start')],
+    ['Field Survey End', v('c1-end')]
+  ]);
+  if (v('c1-limitations')) { sectionH2('1.5 Limitations & Assumptions'); bodyText(v('c1-limitations')); }
+  divider();
+
+  // ── CHAPTER 2: LEGAL FRAMEWORK ──
+  sectionH1('Chapter 2: Policy, Legal & Administrative Framework');
+  var lawsChecked = [];
+  document.querySelectorAll('.law-chk').forEach(function(el) { if (el.checked) lawsChecked.push(el.value); });
+  var stdsChecked = [];
+  document.querySelectorAll('.std-chk').forEach(function(el) { if (el.checked) stdsChecked.push(el.value); });
+  if (lawsChecked.length) { sectionH2('2.1 Applicable National Legislation'); bodyText(lawsChecked.join('\n')); }
+  if (stdsChecked.length) { sectionH2('2.2 International Standards'); bodyText(stdsChecked.join('\n')); }
+  if (v('c2-extra')) { sectionH2('Additional Legislation'); bodyText(v('c2-extra')); }
+  divider();
+
+  // ── CHAPTER 3: PROJECT DESCRIPTION ──
+  sectionH1('Chapter 3: Project Description');
+  infoBox([
+    ['Capacity / Scale', v('c3-capacity')],
+    ['Total Land Area (ha)', v('c3-area')],
+    ['Construction Duration', v('c3-constr') ? v('c3-constr') + ' months' : ''],
+    ['Operational Lifespan', v('c3-life') ? v('c3-life') + ' years' : ''],
+    ['Capital Cost (USD)', v('c3-cost')],
+    ['Peak Construction Workers', v('c3-workers')],
+    ['Local Employment Target', v('c3-local') ? v('c3-local') + '%' : ''],
+    ['Permanent Operations Staff', v('c3-perm')],
+    ['Water Source', v('c3-water-src')],
+    ['Key Hazardous Materials', v('c3-hazmat')]
+  ]);
+  if (v('c3-components')) { sectionH2('3.2 Project Components & Infrastructure'); bodyText(v('c3-components')); }
+  if (v('c3-phasing'))    { sectionH2('3.3 Construction Phasing'); bodyText(v('c3-phasing')); }
+  divider();
+
+  // ── CHAPTER 4: ENVIRONMENTAL BASELINE ──
+  sectionH1('Chapter 4: Baseline Environmental Conditions');
+  sectionH2('4.1 Climate & Meteorology');
+  infoBox([
+    ['Annual Rainfall (mm)', v('c4-rain')],
+    ['Min Temperature (°C)', v('c4-tmin')],
+    ['Max Temperature (°C)', v('c4-tmax')],
+    ['Solar Irradiation (kWh/m²/day)', v('c4-solar')],
+    ['Mean Wind Speed (m/s)', v('c4-wind')],
+    ['Rainy Seasons', v('c4-seasons')]
+  ]);
+  sectionH2('4.2 Soils & Geology');
+  infoBox([
+    ['Dominant Soil Type(s)', v('c4-soil')],
+    ['Soil Depth (cm)', v('c4-soil-depth')],
+    ['Soil pH', v('c4-ph')],
+    ['Erosion Susceptibility', v('c4-erosion')]
+  ]);
+  if (v('c4-geology')) bodyText(v('c4-geology'));
+  sectionH2('4.3 Hydrology & Water Resources');
+  infoBox([
+    ['Nearest River / Water Body', v('c4-river')],
+    ['River Basin', v('c4-basin')],
+    ['Groundwater Depth (m bgl)', v('c4-gw')],
+    ['Flood Risk', v('c4-flood')]
+  ]);
+  sectionH2('4.5 Biodiversity');
+  infoBox([
+    ['Dominant Vegetation Type', v('c4-veg')],
+    ['Total Plant Species', v('c4-plant-spp')],
+    ['Protected/IUCN Plant Species', v('c4-plant-prot')],
+    ['Total Bird Species', v('c4-bird-spp')],
+    ['IUCN Red List Birds', v('c4-bird-red')],
+    ['Nearest Protected Area', v('c4-pa')],
+    ['Critical Habitat Present?', v('c4-critical')]
+  ]);
+  if (v('c4-sensitive')) { sectionH2('Sensitive Species / Habitat Details'); bodyText(v('c4-sensitive')); }
+  divider();
+
+  // ── CHAPTER 5: SOCIAL BASELINE ──
+  sectionH1('Chapter 5: Baseline Social & Economic Conditions');
+  infoBox([
+    ['Current Land Use on Site', v('c5-landuse')],
+    ['Land Tenure Type', v('c5-tenure')],
+    ['Physically Displaced Households', v('c5-phys')],
+    ['Economically Displaced Households', v('c5-econ')],
+    ['Vulnerable Households', v('c5-vuln')],
+    ['Avg. Monthly HH Income (TZS)', v('c5-income')],
+    ['Primary Livelihood', v('c5-livelihood')],
+    ['District Electrification Rate (%)', v('c5-elec')],
+    ['Primary School Enrolment (%)', v('c5-school')],
+    ['Access to Safe Water (%)', v('c5-water')],
+    ['Key Health Challenges', v('c5-health')],
+    ['Cultural Heritage Sites', v('c5-heritage')]
+  ]);
+  if (v('c5-heritage-detail')) { sectionH2('Cultural Heritage Details'); bodyText(v('c5-heritage-detail')); }
+  divider();
+
+  // ── CHAPTER 6: ALTERNATIVES ──
+  sectionH1('Chapter 6: Alternatives Analysis');
+  if (v('c6-rationale')) { sectionH2('6.2 Rationale for Selected Option'); bodyText(v('c6-rationale')); }
+  if (v('c6-tech'))      { sectionH2('6.3 Technology / Design Alternatives'); bodyText(v('c6-tech')); }
+  divider();
+
+  // ── CHAPTER 7: ENVIRONMENTAL IMPACTS ──
+  sectionH1('Chapter 7: Environmental Impact Assessment');
+  // Climate
+  infoBox([
+    ['Annual Energy Generation (GWh)', v('c7-energy')],
+    ['Annual CO₂ Saved (tonnes)', v('c7-co2yr')],
+    ['Lifetime CO₂ Reduction (tonnes)', v('c7-co2life')]
+  ]);
+  if (v('c7-cc')) { sectionH2('Climate Change Vulnerability'); bodyText(v('c7-cc')); }
+  // Impact table from DOM
+  var envRows = [];
+  var envTbody = document.getElementById('tb-env');
+  if (envTbody) {
+    envTbody.querySelectorAll('tr').forEach(function(row) {
+      var inputs = row.querySelectorAll('input, select');
+      var impact = inputs[0] ? inputs[0].value.trim() : '';
+      var phase  = inputs[1] ? inputs[1].value : '';
+      var mit    = inputs[8] ? inputs[8].value.trim() : '';
+      var sc     = row.querySelector('.score-cell');
+      var sg     = row.querySelector('.sig-cell');
+      if (impact) envRows.push([impact, phase, sc ? sc.textContent : '—', sg ? sg.textContent.replace(/\n/g,'') : '—', mit]);
+    });
+  }
+  if (envRows.length) {
+    sectionH2('7.1 Environmental Impact Matrix');
+    checkPage(20);
+    // Table header
+    var colWs = [52, 22, 14, 22, CW - 52 - 22 - 14 - 22];
+    var hdrs  = ['Impact', 'Phase', 'Score', 'Significance', 'Mitigation Measure'];
+    doc.setFillColor(15, 23, 42);
+    doc.rect(ML, yPos, CW, 8, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(255, 255, 255);
+    var hx = ML + 2;
+    hdrs.forEach(function(h, i) { doc.text(h, hx, yPos + 5.5); hx += colWs[i]; });
+    yPos += 8;
+    envRows.forEach(function(row, ri) {
+      var maxLines = 1;
+      var rowLines = row.map(function(cell, ci) {
+        var lines = doc.splitTextToSize(cell || '', colWs[ci] - 3);
+        if (lines.length > maxLines) maxLines = lines.length;
+        return lines;
+      });
+      var rowH = maxLines * 5 + 4;
+      checkPage(rowH + 2);
+      if (ri % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(ML, yPos, CW, rowH, 'F'); }
+      doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2);
+      doc.rect(ML, yPos, CW, rowH);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(30, 41, 59);
+      var cx2 = ML + 2;
+      rowLines.forEach(function(lines, ci) {
+        lines.forEach(function(line, li) { doc.text(line, cx2, yPos + 4.5 + li * 5); });
+        cx2 += colWs[ci];
+      });
+      yPos += rowH;
+    });
+    yPos += 5;
+  }
+  divider();
+
+  // ── CHAPTER 8: SOCIAL IMPACTS ──
+  sectionH1('Chapter 8: Social Impact Assessment');
+  var socRows = [];
+  var socTbody = document.getElementById('tb-soc');
+  if (socTbody) {
+    socTbody.querySelectorAll('tr').forEach(function(row) {
+      var inputs = row.querySelectorAll('input, select');
+      var impact = inputs[0] ? inputs[0].value.trim() : '';
+      var phase  = inputs[1] ? inputs[1].value : '';
+      var mit    = inputs[8] ? inputs[8].value.trim() : '';
+      var sc     = row.querySelector('.score-cell');
+      var sg     = row.querySelector('.sig-cell');
+      if (impact) socRows.push([impact, phase, sc ? sc.textContent : '—', sg ? sg.textContent.replace(/\n/g,'') : '—', mit]);
+    });
+  }
+  if (socRows.length) {
+    sectionH2('8.1 Social Impact Matrix');
+    checkPage(20);
+    var sColWs = [52, 22, 14, 22, CW - 52 - 22 - 14 - 22];
+    doc.setFillColor(15, 23, 42);
+    doc.rect(ML, yPos, CW, 8, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(7.5); doc.setTextColor(255, 255, 255);
+    var shx = ML + 2;
+    ['Social Impact','Phase','Score','Significance','Mitigation / Enhancement'].forEach(function(h,i){ doc.text(h, shx, yPos + 5.5); shx += sColWs[i]; });
+    yPos += 8;
+    socRows.forEach(function(row, ri) {
+      var maxLines = 1;
+      var rowLines = row.map(function(cell, ci) {
+        var lines = doc.splitTextToSize(cell || '', sColWs[ci] - 3);
+        if (lines.length > maxLines) maxLines = lines.length;
+        return lines;
+      });
+      var rowH = maxLines * 5 + 4;
+      checkPage(rowH + 2);
+      if (ri % 2 === 0) { doc.setFillColor(248, 250, 252); doc.rect(ML, yPos, CW, rowH, 'F'); }
+      doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2);
+      doc.rect(ML, yPos, CW, rowH);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(30, 41, 59);
+      var scx = ML + 2;
+      rowLines.forEach(function(lines, ci) {
+        lines.forEach(function(line, li) { doc.text(line, scx, yPos + 4.5 + li * 5); });
+        scx += sColWs[ci];
+      });
+      yPos += rowH;
+    });
+    yPos += 5;
+  }
+  if (v('c8-gender')) { sectionH2('8.2 Gender & Vulnerable Groups'); bodyText(v('c8-gender')); }
+  if (v('c8-child'))  { sectionH2('8.3 Child Labour & Forced Labour'); bodyText(v('c8-child')); }
+  if (v('c8-safety')) { sectionH2('8.4 Community Safety & Security'); bodyText(v('c8-safety')); }
+  divider();
+
+  // ── CHAPTER 9: CUMULATIVE ──
+  sectionH1('Chapter 9: Cumulative Impact Assessment');
+  if (v('c9-hydro'))      { sectionH2('Hydrology / Water Resources'); bodyText(v('c9-hydro')); }
+  if (v('c9-bio'))        { sectionH2('Biodiversity / Habitat Fragmentation'); bodyText(v('c9-bio')); }
+  if (v('c9-soc'))        { sectionH2('Community & Socioeconomic'); bodyText(v('c9-soc')); }
+  if (v('c9-conclusion')) { sectionH2('Overall Cumulative Impact Conclusion'); bodyText(v('c9-conclusion')); }
+  divider();
+
+  // ── CHAPTER 10: STAKEHOLDERS ──
+  sectionH1('Chapter 10: Stakeholder Engagement');
+  if (v('c10-grm')) { sectionH2('10.3 Grievance Redress Mechanism (GRM)'); bodyText(v('c10-grm')); }
+  infoBox([
+    ['GRM Focal Point', v('c10-grm-name')],
+    ['GRM Contact (Phone / Email)', v('c10-grm-contact')]
+  ]);
+  divider();
+
+  // ── CHAPTER 11: ESMP ──
+  sectionH1('Chapter 11: Environmental & Social Management Plan (ESMP)');
+  infoBox([
+    ['E&S Manager', v('c11-esm')],
+    ['Contractor EHS Officer', v('c11-ehs')],
+    ['Independent Monitor', v('c11-monitor')],
+    ['Regulatory Reporting Frequency', v('c11-report')]
+  ]);
+  divider();
+
+  // ── CHAPTER 12: EMERGENCY RESPONSE ──
+  sectionH1('Chapter 12: Emergency Response & Contingency Plan');
+  if (v('c12-erp')) { sectionH2('12.1 Emergency Response Plan'); bodyText(v('c12-erp')); }
+  infoBox([
+    ['Emergency Coordinator', v('c12-coord')],
+    ['Emergency Contact Number', v('c12-contact')]
+  ]);
+  divider();
+
+  // ── CHAPTER 13: CONCLUSION ──
+  sectionH1('Chapter 13: Conclusion & Recommendations');
+  if (v('c13-summary'))    { sectionH2('13.1 Summary of Key Findings'); bodyText(v('c13-summary')); }
+  infoBox([['E&S Feasibility Outcome', v('c13-outcome')]]);
+  if (v('c13-conclusion')) { sectionH2('13.2 Formal Conclusion Statement'); bodyText(v('c13-conclusion')); }
+  if (v('c13-recs'))       { sectionH2('13.3 Recommendations to Regulator'); bodyText(v('c13-recs')); }
+  divider();
+
+  // ── SIGNATURES ──
+  sectionH1('Declaration & Signatures');
+  checkPage(10);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(71, 85, 105);
+  bodyText('We, the undersigned, declare that this Environmental and Social Impact Assessment has been prepared in good faith, based on accurate field data, sound professional judgment, and in compliance with applicable national legislation and financing standards referenced in this report.');
+  spacer(6);
+  sigBlock('ESIA Team Leader', v('sig-tl-name'), 'Reg. No.: ' + (v('sig-tl-reg') || 'N/A'), v('sig-tl-date'));
+  sigBlock('Authorised Representative — Proponent', v('sig-pr-name'), v('sig-pr-title'), v('sig-pr-date'));
+  sigBlock('Independent Environmental Monitor', v('sig-im-name'), v('sig-im-org'), v('sig-im-date'));
+
+  // ── CONTACT / BACK COVER ──
+  doc.addPage(); pageNum++;
+  doc.setFillColor(15, 23, 42);
+  doc.rect(0, 0, PW, PH, 'F');
+  doc.setFillColor(14, 165, 233);
+  doc.rect(0, PH/2 - 1, PW, 1.5, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(18); doc.setTextColor(255, 255, 255);
+  doc.text('Arnorex ESIA Pro', PW/2, 90, { align: 'center' });
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(14, 165, 233);
+  doc.text('PROFESSIONAL ENVIRONMENTAL & SOCIAL IMPACT ASSESSMENT PLATFORM', PW/2, 100, { align: 'center' });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(148, 163, 184);
+  doc.text('PREPARED BY', PW/2, 118, { align: 'center' });
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(255, 255, 255);
+  doc.text('Arnold Elikunda', PW/2, 128, { align: 'center' });
+  var contacts = [
+    '✉  arnoldelikunda@gmail.com',
+    '☎  +255 773 223 565  |  +255 743 073 565',
+    '💼  linkedin.com/in/arnoldelikunda',
+    '✗   @Arnold_Elikunda  (X / Twitter)',
+    '📸  @Arnold_Elikunda  (Instagram)',
+    '💬  WhatsApp: +255 773 223 565'
+  ];
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(148, 163, 184);
+  contacts.forEach(function(c, i) {
+    doc.text(c, PW/2, 148 + i * 12, { align: 'center' });
+  });
+  addPageFooter();
+
+  // ── SAVE ──
+  var filename = (projName.replace(/[\s/\\?*:|"<>]/g, '_') || 'ESIA_Report') +
+                 '_' + new Date().toISOString().slice(0, 10) + '.pdf';
+  doc.save(filename);
+  toast('✓ Professional PDF report generated!');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  WORD EXPORT — STRUCTURED DOCX WITH PROPER HEADINGS & TABLES
+// ══════════════════════════════════════════════════════════════
+async function exportWord() {
+  if (!window.docx) { toast('⚠ Word library loading — retry', true); return; }
+  REPORTS_GENERATED++;
+  toast('⏳ Building Word document...');
+  await new Promise(function(r) { setTimeout(r, 100); });
+
+  try {
+    var {
+      Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+      HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
+      PageNumber, Footer, Header, UnderlineType
+    } = docx;
+
+    function v(id) { var e = document.getElementById(id); return e ? (e.value || '').trim() : ''; }
+
+    var children = [];
+    var TW = 9200; // Table width in DXA
+
+    // ── HELPERS ──
+    function BORDER() { return { style: BorderStyle.SINGLE, size: 1, color: 'E2E8F0' }; }
+    function ALL_BORDERS() { return { top: BORDER(), bottom: BORDER(), left: BORDER(), right: BORDER() }; }
+
+    function h1(text) {
+      return new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 400, after: 120 },
+        shading: { type: ShadingType.CLEAR, fill: '0F172A' },
+        children: [new TextRun({ text: text, bold: true, size: 28, font: 'Calibri', color: 'FFFFFF' })]
+      });
+    }
+    function h2(text) {
+      return new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        spacing: { before: 240, after: 100 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: 'BFDBFE', space: 1 } },
+        children: [new TextRun({ text: text, bold: true, size: 22, font: 'Calibri', color: '1E3A8A' })]
+      });
+    }
+    function bodyP(text) {
+      if (!text) return null;
+      // Handle multi-line text by splitting paragraphs
+      var paras = text.split('\n').filter(function(l) { return l.trim(); });
+      return paras.map(function(para) {
+        return new Paragraph({
+          spacing: { before: 60, after: 120 },
+          children: [new TextRun({ text: para.trim(), size: 20, font: 'Calibri', color: '1E293B' })]
+        });
+      });
+    }
+    function labelP(text) {
+      return new Paragraph({
+        spacing: { before: 120, after: 30 },
+        children: [new TextRun({ text: text, bold: true, size: 18, font: 'Calibri', color: '1E40AF' })]
+      });
+    }
+    function sp() {
+      return new Paragraph({ children: [new TextRun({ text: '' })], spacing: { before: 80, after: 80 } });
+    }
+    function add(item) {
+      if (!item) return;
+      if (Array.isArray(item)) { item.forEach(function(i) { if (i) children.push(i); }); }
+      else children.push(item);
+    }
+    function addPair(label, val) {
+      if (!val) return;
+      add(labelP(label));
+      add(bodyP(val));
+    }
+    function addChapter(num, title, buildFn) {
+      add(sp());
+      add(h1((num !== '' ? 'Chapter ' + num + ': ' : '') + title));
+      buildFn();
+      add(sp());
+    }
+
+    // ── MAKE TABLE ──
+    function makeTable(headers, rows) {
+      if (!rows || !rows.length) return null;
+      var colCount = headers.length;
+      var colW = Math.floor(TW / colCount);
+      var hdrRow = new TableRow({
+        children: headers.map(function(h) {
+          return new TableCell({
+            borders: ALL_BORDERS(),
+            shading: { type: ShadingType.CLEAR, fill: '0F172A' },
+            width: { size: colW, type: WidthType.DXA },
+            margins: { top: 80, bottom: 80, left: 120, right: 120 },
+            children: [new Paragraph({ children: [new TextRun({ text: h, bold: true, size: 18, font: 'Calibri', color: 'FFFFFF' })] })]
+          });
+        })
+      });
+      var dataRows = rows.filter(function(r) { return r.some(function(c) { return c; }); }).map(function(row, ri) {
+        return new TableRow({
+          children: row.map(function(cell) {
+            return new TableCell({
+              borders: ALL_BORDERS(),
+              shading: ri % 2 === 0 ? { type: ShadingType.CLEAR, fill: 'F8FAFC' } : undefined,
+              width: { size: colW, type: WidthType.DXA },
+              margins: { top: 80, bottom: 80, left: 120, right: 120 },
+              children: [new Paragraph({ children: [new TextRun({ text: cell || '', size: 18, font: 'Calibri' })] })]
+            });
+          })
+        });
+      });
+      return new Table({ width: { size: TW, type: WidthType.DXA }, rows: [hdrRow, ...dataRows] });
+    }
+
+    // ── COVER ──
+    var projName = v('cv-proj-name') || 'ESIA Report';
+    add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 720, after: 160 }, children: [new TextRun({ text: 'ARNOREX ESIA PRO', bold: true, size: 18, font: 'Calibri', color: '0EA5E9' })] }));
+    add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 0, after: 120 }, children: [new TextRun({ text: 'Environmental & Social Impact Assessment', bold: true, size: 40, font: 'Calibri', color: '0F172A' })] }));
+    add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 80, after: 80 }, children: [new TextRun({ text: projName, size: 28, font: 'Calibri', color: '1E3A8A' })] }));
+    var cl = v('cv-client-f');
+    if (cl) add(new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 40, after: 240 }, children: [new TextRun({ text: cl, size: 22, font: 'Calibri', color: '64748B' })] }));
+
+    // Cover metadata table
+    var covMeta = [
+      ['Project Location', v('cv-location')], ['Report Date', v('cv-date-f')],
+      ['Report Version', v('cv-version')], ['Regulatory Authority', v('cv-authority') || 'NEMC'],
+      ['Reference No.', v('cv-refno')], ['ESIA Stage', v('cv-stage')],
+      ['Financing Standard', v('cv-financing')], ['Project Type', PROJ_TYPE]
+    ].filter(function(m) { return m[1]; });
+
+    if (covMeta.length) {
+      var covTable = makeTable(['Field', 'Detail'], covMeta);
+      if (covTable) add(covTable);
+    }
+    add(sp());
+
+    // ── CHAPTERS ──
+    addChapter('0', 'Scoping & Terms of Reference', function() {
+      addPair('TOR Reference Number', v('sc-tor-ref'));
+      addPair('ESIA Category', v('sc-category'));
+      if (v('sc-summary')) { add(h2('Scoping Outcome Summary')); add(bodyP(v('sc-summary'))); }
+    });
+
+    addChapter('1', 'Introduction', function() {
+      if (v('c1-background'))  { add(h2('1.1 Project Background')); add(bodyP(v('c1-background'))); }
+      if (v('c1-purpose'))     { add(h2('1.2 Purpose & Objectives')); add(bodyP(v('c1-purpose'))); }
+      if (v('c1-methodology')) { add(h2('1.3 Assessment Methodology')); add(bodyP(v('c1-methodology'))); }
+      addPair('Area of Influence', v('c1-aoi') ? v('c1-aoi') + ' km radius' : '');
+      addPair('Study Area', v('c1-study-area'));
+      if (v('c1-limitations')) { add(h2('1.5 Limitations & Assumptions')); add(bodyP(v('c1-limitations'))); }
+    });
+
+    addChapter('2', 'Policy, Legal & Administrative Framework', function() {
+      var laws = []; document.querySelectorAll('.law-chk').forEach(function(e) { if (e.checked) laws.push(e.value); });
+      var stds = []; document.querySelectorAll('.std-chk').forEach(function(e) { if (e.checked) stds.push(e.value); });
+      if (laws.length) { add(h2('2.1 Applicable National Legislation')); add(bodyP(laws.join('\n'))); }
+      if (stds.length) { add(h2('2.2 International Standards')); add(bodyP(stds.join('\n'))); }
+      if (v('c2-extra')) { add(h2('Additional Legislation')); add(bodyP(v('c2-extra'))); }
+    });
+
+    addChapter('3', 'Project Description', function() {
+      var specTable = makeTable(['Parameter', 'Value'], [
+        ['Capacity / Scale', v('c3-capacity')], ['Total Land Area (ha)', v('c3-area')],
+        ['Construction Duration', v('c3-constr') ? v('c3-constr') + ' months' : ''],
+        ['Operational Lifespan', v('c3-life') ? v('c3-life') + ' years' : ''],
+        ['Capital Cost (USD)', v('c3-cost')], ['Peak Workers', v('c3-workers')],
+        ['Local Employment Target', v('c3-local') ? v('c3-local') + '%' : ''],
+        ['Water Source', v('c3-water-src')], ['Key Hazardous Materials', v('c3-hazmat')]
+      ].filter(function(r) { return r[1]; }));
+      if (specTable) { add(h2('3.1 Core Specifications')); add(specTable); add(sp()); }
+      if (v('c3-components')) { add(h2('3.2 Components & Infrastructure')); add(bodyP(v('c3-components'))); }
+      if (v('c3-phasing'))    { add(h2('3.3 Construction Phasing')); add(bodyP(v('c3-phasing'))); }
+    });
+
+    addChapter('4', 'Baseline Environmental Conditions', function() {
+      var climTable = makeTable(['Parameter','Value'], [
+        ['Annual Rainfall (mm)', v('c4-rain')], ['Min Temp (°C)', v('c4-tmin')],
+        ['Max Temp (°C)', v('c4-tmax')], ['Solar Irradiation', v('c4-solar')],
+        ['Wind Speed (m/s)', v('c4-wind')], ['Rainy Seasons', v('c4-seasons')]
+      ].filter(function(r){return r[1];}));
+      if (climTable) { add(h2('4.1 Climate & Meteorology')); add(climTable); add(sp()); }
+      var soilTable = makeTable(['Parameter','Value'], [
+        ['Dominant Soil Type(s)', v('c4-soil')], ['Soil Depth (cm)', v('c4-soil-depth')],
+        ['Soil pH', v('c4-ph')], ['Erosion Susceptibility', v('c4-erosion')]
+      ].filter(function(r){return r[1];}));
+      if (soilTable) { add(h2('4.2 Soils & Geology')); add(soilTable); add(sp()); }
+      if (v('c4-geology')) add(bodyP(v('c4-geology')));
+      add(h2('4.3 Hydrology'));
+      addPair('Nearest River / Water Body', v('c4-river'));
+      addPair('River Basin', v('c4-basin'));
+      addPair('Groundwater Depth', v('c4-gw'));
+      addPair('Flood Risk', v('c4-flood'));
+      if (v('c4-veg')) { add(h2('4.5 Biodiversity')); addPair('Dominant Vegetation', v('c4-veg')); addPair('Nearest Protected Area', v('c4-pa')); }
+      if (v('c4-sensitive')) add(bodyP(v('c4-sensitive')));
+    });
+
+    addChapter('5', 'Baseline Social & Economic Conditions', function() {
+      var socTable = makeTable(['Indicator','Value'], [
+        ['Current Land Use on Site', v('c5-landuse')], ['Land Tenure Type', v('c5-tenure')],
+        ['Physically Displaced HH', v('c5-phys')], ['Economically Displaced HH', v('c5-econ')],
+        ['Avg Monthly Income (TZS)', v('c5-income')], ['Primary Livelihood', v('c5-livelihood')],
+        ['Electrification Rate (%)', v('c5-elec')], ['School Enrolment (%)', v('c5-school')],
+        ['Access to Safe Water (%)', v('c5-water')], ['Key Health Challenges', v('c5-health')]
+      ].filter(function(r){return r[1];}));
+      if (socTable) { add(socTable); add(sp()); }
+      if (v('c5-heritage')) addPair('Heritage Sites Identified', v('c5-heritage'));
+      if (v('c5-heritage-detail')) add(bodyP(v('c5-heritage-detail')));
+    });
+
+    addChapter('6', 'Alternatives Analysis', function() {
+      if (v('c6-rationale')) { add(h2('6.2 Rationale for Selected Option')); add(bodyP(v('c6-rationale'))); }
+      if (v('c6-tech'))      { add(h2('6.3 Technology / Design Alternatives')); add(bodyP(v('c6-tech'))); }
+    });
+
+    // Ch 7: Environmental Impacts with full table from DOM
+    addChapter('7', 'Environmental Impact Assessment', function() {
+      addPair('Annual Energy Generation (GWh)', v('c7-energy'));
+      addPair('Annual CO₂ Saved (tonnes)', v('c7-co2yr'));
+      if (v('c7-cc')) { add(h2('Climate Change Vulnerability')); add(bodyP(v('c7-cc'))); }
+      var eRows = [];
+      var etb = document.getElementById('tb-env');
+      if (etb) { etb.querySelectorAll('tr').forEach(function(row) {
+        var inp = row.querySelectorAll('input, select');
+        var imp = inp[0] ? inp[0].value.trim() : '';
+        if (!imp) return;
+        var sc = row.querySelector('.score-cell');
+        var sg = row.querySelector('.sig-cell');
+        eRows.push([imp, inp[1]?inp[1].value:'', sc?sc.textContent:'—', sg?sg.textContent.replace(/\s+/g,' ').trim():'—', inp[8]?inp[8].value.trim():'']);
+      }); }
+      if (eRows.length) {
+        add(h2('7.1 Environmental Impact Matrix'));
+        var etbl = makeTable(['Impact','Phase','Score','Significance','Mitigation Measure'], eRows);
+        if (etbl) { add(etbl); add(sp()); }
+      }
+    });
+
+    addChapter('8', 'Social Impact Assessment', function() {
+      var sRows = [];
+      var stb = document.getElementById('tb-soc');
+      if (stb) { stb.querySelectorAll('tr').forEach(function(row) {
+        var inp = row.querySelectorAll('input, select');
+        var imp = inp[0] ? inp[0].value.trim() : '';
+        if (!imp) return;
+        var sc = row.querySelector('.score-cell');
+        var sg = row.querySelector('.sig-cell');
+        sRows.push([imp, inp[1]?inp[1].value:'', sc?sc.textContent:'—', sg?sg.textContent.replace(/\s+/g,' ').trim():'—', inp[8]?inp[8].value.trim():'']);
+      }); }
+      if (sRows.length) {
+        add(h2('8.1 Social Impact Matrix'));
+        var stbl = makeTable(['Social Impact','Phase','Score','Significance','Mitigation / Enhancement'], sRows);
+        if (stbl) { add(stbl); add(sp()); }
+      }
+      if (v('c8-gender')) { add(h2('8.2 Gender & Vulnerable Groups')); add(bodyP(v('c8-gender'))); }
+      if (v('c8-child'))  { add(h2('8.3 Child Labour & Forced Labour')); add(bodyP(v('c8-child'))); }
+      if (v('c8-safety')) { add(h2('8.4 Community Safety & Security')); add(bodyP(v('c8-safety'))); }
+    });
+
+    addChapter('9', 'Cumulative Impact Assessment', function() {
+      if (v('c9-hydro'))      { add(h2('Hydrology / Water Resources')); add(bodyP(v('c9-hydro'))); }
+      if (v('c9-bio'))        { add(h2('Biodiversity / Habitat Fragmentation')); add(bodyP(v('c9-bio'))); }
+      if (v('c9-soc'))        { add(h2('Community & Socioeconomic')); add(bodyP(v('c9-soc'))); }
+      if (v('c9-conclusion')) { add(h2('Overall Cumulative Impact Conclusion')); add(bodyP(v('c9-conclusion'))); }
+    });
+
+    addChapter('10', 'Stakeholder Engagement', function() {
+      if (v('c10-grm')) { add(h2('10.3 Grievance Redress Mechanism (GRM)')); add(bodyP(v('c10-grm'))); }
+      addPair('GRM Focal Point', v('c10-grm-name'));
+      addPair('GRM Contact (Phone / Email)', v('c10-grm-contact'));
+    });
+
+    addChapter('11', 'Environmental & Social Management Plan (ESMP)', function() {
+      addPair('E&S Manager', v('c11-esm'));
+      addPair('Contractor EHS Officer', v('c11-ehs'));
+      addPair('Independent Monitor', v('c11-monitor'));
+      addPair('Regulatory Reporting Frequency', v('c11-report'));
+    });
+
+    addChapter('12', 'Emergency Response & Contingency Plan', function() {
+      if (v('c12-erp')) { add(h2('12.1 Emergency Response Plan')); add(bodyP(v('c12-erp'))); }
+      addPair('Emergency Coordinator', v('c12-coord'));
+      addPair('Emergency Contact Number', v('c12-contact'));
+    });
+
+    addChapter('13', 'Conclusion & Recommendations', function() {
+      if (v('c13-summary'))    { add(h2('13.1 Summary of Key Findings')); add(bodyP(v('c13-summary'))); }
+      addPair('E&S Feasibility Outcome', v('c13-outcome'));
+      if (v('c13-conclusion')) { add(h2('13.2 Formal Conclusion Statement')); add(bodyP(v('c13-conclusion'))); }
+      if (v('c13-recs'))       { add(h2('13.3 Recommendations to Regulator')); add(bodyP(v('c13-recs'))); }
+    });
+
+    addChapter('', 'Declaration & Signatures', function() {
+      add(bodyP('We, the undersigned, declare that this Environmental and Social Impact Assessment has been prepared in good faith, based on accurate field data, sound professional judgment, and in compliance with applicable national legislation and financing standards referenced in this report.'));
+      add(sp());
+      var sigTable = makeTable(['Role', 'Name', 'Detail', 'Date'], [
+        ['ESIA Team Leader', v('sig-tl-name'), 'Reg. No.: ' + (v('sig-tl-reg') || 'N/A'), v('sig-tl-date')],
+        ['Authorised Representative', v('sig-pr-name'), v('sig-pr-title'), v('sig-pr-date')],
+        ['Independent Monitor', v('sig-im-name'), v('sig-im-org'), v('sig-im-date')]
+      ].filter(function(r) { return r[1]; }));
+      if (sigTable) { add(sigTable); add(sp()); }
+    });
+
+    // Contact footer paragraph
+    add(sp()); add(sp());
+    add(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 200, after: 60 },
+      children: [new TextRun({ text: 'Arnorex ESIA Pro', bold: true, size: 24, font: 'Calibri', color: '0F172A' })]
+    }));
+    add(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: 'Prepared by Arnold Elikunda  |  arnoldelikunda@gmail.com  |  +255 773 223 565  |  +255 743 073 565', size: 18, font: 'Calibri', color: '64748B' })]
+    }));
+    add(new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [new TextRun({ text: 'linkedin.com/in/arnoldelikunda  |  @Arnold_Elikunda  |  WhatsApp: +255 773 223 565', size: 18, font: 'Calibri', color: '64748B' })]
+    }));
+
+    // Footer & Header for Word
+    var wordFooter = new Footer({ children: [new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({ text: 'Arnorex ESIA Pro  |  arnoldelikunda@gmail.com  |  Page ', size: 16, font: 'Calibri', color: '94A3B8' }),
+        new TextRun({ children: [PageNumber.CURRENT], size: 16, font: 'Calibri', color: '94A3B8' }),
+        new TextRun({ text: ' of ', size: 16, font: 'Calibri', color: '94A3B8' }),
+        new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, font: 'Calibri', color: '94A3B8' })
+      ]
+    })] });
+    var wordHeader = new Header({ children: [new Paragraph({
+      border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: 'E2E8F0', space: 1 } },
+      spacing: { after: 80 },
+      children: [new TextRun({ text: projName + '  —  Environmental & Social Impact Assessment', size: 16, font: 'Calibri', color: '94A3B8' })]
+    })] });
+
+    var wordDoc = new Document({
+      styles: { default: { document: { run: { font: 'Calibri', size: 20, color: '1E293B' } } } },
+      sections: [{
+        properties: {
+          page: {
+            size: { width: 11906, height: 16838 },
+            margin: { top: 1200, right: 1100, bottom: 1200, left: 1100 }
+          }
+        },
+        headers: { default: wordHeader },
+        footers: { default: wordFooter },
+        children: children.filter(Boolean)
+      }]
+    });
+
+    var blob = await Packer.toBlob(wordDoc);
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (projName.replace(/[\s/\\?*:|"<>]/g, '_') || 'ESIA') + '_' + new Date().toISOString().slice(0, 10) + '.docx';
+    a.click();
+    toast('✓ Word document exported!');
+  } catch (err) {
+    console.error('Word export error:', err);
+    toast('✕ Word export failed: ' + err.message, true);
+  }
+}
   if (!window.jspdf) { toast('⚠ PDF library loading — retry', true); return; }
   REPORTS_GENERATED++;
   var jsPDF = window.jspdf.jsPDF;
@@ -2256,70 +3417,6 @@ function exportPDF() {
   ch('10','Stakeholder Engagement',function(){h2('GRM');body(v('c10-grm'));pair('GRM Focal Point',v('c10-grm-name'));pair('GRM Contact',v('c10-grm-contact'));});
   ch('11','ESMP',function(){pair('E&S Manager',v('c11-esm'));pair('Reporting Frequency',v('c11-report'));});
   ch('12','Emergency Response',function(){body(v('c12-erp'));pair('Emergency Coordinator',v('c12-coord'));pair('Emergency Contact',v('c12-contact'));});
-  ch('13','Conclusion',function(){pair('Feasibility Outcome',v('c13-outcome'));h2('Formal Conclusion Statement');body(v('c13-conclusion'));h2('Recommendations');body(v('c13-recs'));});
-  h1('Declaration & Signatures');
-  pair('Team Leader',v('sig-tl-name'));pair('Registration No.',v('sig-tl-reg'));pair('Date',v('sig-tl-date'));
-  pair('Proponent Representative',v('sig-pr-name'));pair('Title',v('sig-pr-title'));
-  pair('Independent Monitor',v('sig-im-name'));pair('Organisation',v('sig-im-org'));
-  // Contact page
-  doc.addPage();pg++;
-  doc.setFillColor(15,23,42);doc.rect(0,0,PW,297,'F');
-  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(255,255,255);doc.text('Arnorex ESIA Pro',PW/2,60,{align:'center'});
-  doc.setFontSize(9);doc.setTextColor(14,165,233);doc.text('PREPARED BY ARNOLD ELIKUNDA',PW/2,73,{align:'center'});
-  ['📧  arnoldelikunda@gmail.com','📞  +255 773 223 565','📞  +255 743 073 565','💼  linkedin.com/in/arnoldelikunda','𝕏   @Arnold_Elikunda','📸  Instagram: @Arnold_Elikunda','💬  WhatsApp: +255 773 223 565'].forEach(function(c,i){doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(160,200,230);doc.text(c,PW/2,92+i*12,{align:'center'});});
-  addFtr();
-  doc.save((pn.replace(/\s+/g,'_')||'ESIA_Report')+'_'+new Date().toISOString().slice(0,10)+'.pdf');
-  toast('✓ PDF report generated!');
-}
-
-// ── WORD EXPORT ──
-async function exportWord() {
-  if (!window.docx) { toast('⚠ Word library loading — retry', true); return; }
-  REPORTS_GENERATED++;
-  toast('⏳ Building Word document...');
-  await new Promise(function(r){ setTimeout(r, 80); });
-  try {
-    var {Document,Packer,Paragraph,TextRun,HeadingLevel,AlignmentType,BorderStyle,PageNumber,Footer,Header} = docx;
-    function v(id){ var e=document.getElementById(id); return e?e.value.trim():''; }
-    var ch=[];
-    function h1p(t){return new Paragraph({heading:HeadingLevel.HEADING_1,spacing:{before:360,after:120},children:[new TextRun({text:t,bold:true,size:28,font:'Calibri',color:'0f172a'})]});}
-    function h2p(t){return new Paragraph({heading:HeadingLevel.HEADING_2,spacing:{before:200,after:80},children:[new TextRun({text:t,bold:true,size:22,font:'Calibri',color:'1e3a8a'})]});}
-    function bp(t){if(!t)return null;return new Paragraph({spacing:{before:60,after:100},children:[new TextRun({text:t,size:20,font:'Calibri'})]});}
-    function lp(l){return new Paragraph({spacing:{before:100,after:30},children:[new TextRun({text:l,bold:true,size:18,font:'Calibri',color:'1e40af'})]});}
-    function sp(){return new Paragraph({children:[new TextRun({text:'',size:18})],spacing:{before:60,after:60}});}
-    function add(p){if(p)ch.push(p);}
-    function addPair(l,vl){if(!vl)return;add(lp(l));add(bp(vl));}
-    function chap(n,t,fn){add(sp());add(h1p('Chapter '+n+': '+t));fn();add(sp());}
-    add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:720,after:160},children:[new TextRun({text:'ARNOREX ESIA PRO',bold:true,size:16,font:'Calibri',color:'0ea5e9'})]}));
-    add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:0,after:100},children:[new TextRun({text:'Environmental & Social Impact Assessment',bold:true,size:36,font:'Calibri'})]}));
-    var pn=v('cv-proj-name')||'ESIA Report';
-    add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:60,after:60},children:[new TextRun({text:pn,size:26,font:'Calibri',color:'1e3a8a'})]}));
-    var cl=v('cv-client-f');if(cl)add(new Paragraph({alignment:AlignmentType.CENTER,spacing:{before:40,after:200},children:[new TextRun({text:cl,size:20,font:'Calibri',color:'64748b'})]}));
-    chap('0','Scoping',function(){addPair('TOR Reference',v('sc-tor-ref'));addPair('ESIA Category',v('sc-category'));add(h2p('Scoping Outcome Summary'));add(bp(v('sc-summary')));});
-    chap('1','Introduction',function(){add(h2p('Background'));add(bp(v('c1-background')));add(h2p('Purpose'));add(bp(v('c1-purpose')));add(h2p('Methodology'));add(bp(v('c1-methodology')));addPair('Limitations',v('c1-limitations'));});
-    chap('3','Project Description',function(){addPair('Capacity',v('c3-capacity'));addPair('Land Area (ha)',v('c3-area'));addPair('Capital Cost (USD)',v('c3-cost'));add(h2p('Components'));add(bp(v('c3-components')));addPair('Peak Workers',v('c3-workers'));});
-    chap('4','Environmental Baseline',function(){addPair('Annual Rainfall (mm)',v('c4-rain'));addPair('Dominant Soil Type',v('c4-soil'));add(h2p('Geology'));add(bp(v('c4-geology')));addPair('Nearest River',v('c4-river'));addPair('Dominant Vegetation',v('c4-veg'));add(bp(v('c4-sensitive')));});
-    chap('5','Social Baseline',function(){addPair('Land Use',v('c5-landuse'));addPair('Land Tenure',v('c5-tenure'));addPair('Displaced HH',v('c5-phys'));addPair('Income',v('c5-income'));});
-    chap('6','Alternatives',function(){add(h2p('Rationale'));add(bp(v('c6-rationale')));add(h2p('Technology'));add(bp(v('c6-tech')));});
-    chap('9','Cumulative Impacts',function(){add(bp(v('c9-hydro')));add(bp(v('c9-bio')));add(bp(v('c9-soc')));add(h2p('Conclusion'));add(bp(v('c9-conclusion')));});
-    chap('10','Stakeholder Engagement',function(){add(h2p('GRM'));add(bp(v('c10-grm')));addPair('GRM Contact',v('c10-grm-contact'));});
-    chap('11','ESMP',function(){addPair('E&S Manager',v('c11-esm'));addPair('Reporting Frequency',v('c11-report'));});
-    chap('12','Emergency Response',function(){add(bp(v('c12-erp')));addPair('Emergency Coordinator',v('c12-coord'));});
-    chap('13','Conclusion',function(){addPair('Feasibility Outcome',v('c13-outcome'));add(h2p('Formal Conclusion'));add(bp(v('c13-conclusion')));add(h2p('Recommendations'));add(bp(v('c13-recs')));});
-    add(sp());add(h1p('Declaration & Signatures'));
-    addPair('Team Leader',v('sig-tl-name'));addPair('Proponent Representative',v('sig-pr-name'));
-    add(sp());add(bp('Arnorex ESIA Pro | arnoldelikunda@gmail.com | +255 773 223 565 | linkedin.com/in/arnoldelikunda | @Arnold_Elikunda'));
-    var ftr=new Footer({children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Arnorex ESIA Pro  |  Page ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.CURRENT],size:16,color:'888888',font:'Calibri'}),new TextRun({text:' of ',size:16,color:'888888',font:'Calibri'}),new TextRun({children:[PageNumber.TOTAL_PAGES],size:16,color:'888888',font:'Calibri'})]})]});
-    var hdr=new Header({children:[new Paragraph({border:{bottom:{style:BorderStyle.SINGLE,size:2,color:'e2e8f0',space:1}},spacing:{after:100},children:[new TextRun({text:pn+' — Environmental & Social Impact Assessment',size:16,color:'94a3b8',font:'Calibri'})]})]});
-    var wordDoc=new Document({sections:[{properties:{page:{size:{width:11906,height:16838},margin:{top:1200,right:1100,bottom:1200,left:1100}}},headers:{default:hdr},footers:{default:ftr},children:ch.filter(Boolean)}]});
-    var blob=await Packer.toBlob(wordDoc);
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download=(pn.replace(/\s+/g,'_')||'ESIA')+'_'+new Date().toISOString().slice(0,10)+'.docx';
-    a.click();
-    toast('✓ Word document exported!');
-  } catch(err){console.error(err);toast('✕ Word export failed: '+err.message,true);}
-}
-
 // ── INPUT LISTENERS (trigger debounced cloud save) ──
 document.addEventListener('input',  function(){ scheduleSave(); });
 document.addEventListener('change', function(){ scheduleSave(); });
@@ -2358,4 +3455,4 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 </body>
-       </html>
+              </html>
