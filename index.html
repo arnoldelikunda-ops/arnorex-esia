@@ -30,14 +30,15 @@
     appId: "1:372225941309:web:5b03df354f70babd9a6f54"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db  = getFirestore(app);
+  const app  = initializeApp(firebaseConfig);
+  const db   = getFirestore(app);
   const auth = getAuth(app);
 
-  // ── MIRROR KILLER: unique ID per project, never reuse ──
+  // ── MIRROR KILLER ──
   window.currentProjectId = null;
+  window._currentUser = null;
 
-  // ── Expose Firebase methods globally for non-module script ──
+  // ── Expose Firebase API to global scope (non-module scripts) ──
   window._fb = {
     db, auth,
     doc, setDoc, getDoc, getDocs, collection,
@@ -46,27 +47,134 @@
     signOut, sendPasswordResetEmail, updateProfile
   };
 
-  // ── Auth state listener — runs before anything else ──
+  // ── Auth state listener ──
+  // Uses a queue so it works even if the main script isn't ready yet
   onAuthStateChanged(auth, function(user) {
+    window._currentUser = user ? user : null;
+
     if (user) {
-      window._currentUser = user;
-      document.getElementById('auth-screen').style.display = 'none';
-      document.getElementById('app-root').style.display = 'flex';
-      // Update UI with user info
-      var nameEl = document.getElementById('sb-user-name');
-      var emailEl = document.getElementById('sb-user-email');
+      // Hide auth, show app
+      var authScr = document.getElementById('auth-screen');
+      var appRoot = document.getElementById('app-root');
+      if (authScr) authScr.style.display = 'none';
+      if (appRoot) appRoot.style.display  = 'flex';
+
+      // Update sidebar user info
+      var nameEl   = document.getElementById('sb-user-name');
+      var emailEl  = document.getElementById('sb-user-email');
       var avatarEl = document.getElementById('sb-avatar');
-      if (nameEl) nameEl.textContent = user.displayName || user.email.split('@')[0];
-      if (emailEl) emailEl.textContent = user.email;
-      if (avatarEl) avatarEl.textContent = (user.displayName || user.email)[0].toUpperCase();
-      // Load user's projects from Firestore
-      if (window._appReady) window.loadUserProjects();
+      var dispName = user.displayName || user.email.split('@')[0];
+      if (nameEl)   nameEl.textContent   = dispName;
+      if (emailEl)  emailEl.textContent  = user.email;
+      if (avatarEl) avatarEl.textContent = dispName[0].toUpperCase();
+
+      // Wait for main script to be ready, then load projects
+      function tryLoad() {
+        if (window._appReady && typeof window.loadUserProjects === 'function') {
+          window.loadUserProjects();
+        } else {
+          setTimeout(tryLoad, 100);
+        }
+      }
+      tryLoad();
+
     } else {
-      window._currentUser = null;
-      document.getElementById('auth-screen').style.display = 'flex';
-      document.getElementById('app-root').style.display = 'none';
+      // Show auth screen
+      var authScr2 = document.getElementById('auth-screen');
+      var appRoot2 = document.getElementById('app-root');
+      if (authScr2) authScr2.style.display = 'flex';
+      if (appRoot2) appRoot2.style.display  = 'none';
     }
   });
+
+  // ── Expose auth action functions to window so onclick handlers can call them ──
+  // These MUST be on window because type="module" creates a private scope
+  window.doLogin = function() {
+    var email = (document.getElementById('login-email') || {}).value;
+    var pass  = (document.getElementById('login-pass')  || {}).value;
+    if (!email || !pass) { _showAuthErr('login-error', 'Please enter your email and password.'); return; }
+    var btn = document.getElementById('login-btn');
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Signing in...'; }
+    signInWithEmailAndPassword(auth, email.trim(), pass)
+      .then(function() {
+        if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Sign In'; }
+      })
+      .catch(function(err) {
+        if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Sign In'; }
+        var msgs = {
+          'auth/wrong-password':       'Incorrect password. Please try again.',
+          'auth/user-not-found':       'No account found with this email.',
+          'auth/invalid-email':        'Invalid email address.',
+          'auth/too-many-requests':    'Too many attempts. Please try again later.',
+          'auth/invalid-credential':   'Incorrect email or password.',
+          'auth/network-request-failed': 'Network error. Check your connection.'
+        };
+        _showAuthErr('login-error', msgs[err.code] || 'Sign in failed: ' + err.message);
+      });
+  };
+
+  window.doSignup = function() {
+    var name  = (document.getElementById('signup-name')  || {}).value;
+    var email = (document.getElementById('signup-email') || {}).value;
+    var pass  = (document.getElementById('signup-pass')  || {}).value;
+    if (!name || !name.trim())   { _showAuthErr('signup-error', 'Please enter your full name.'); return; }
+    if (!email || !email.trim()) { _showAuthErr('signup-error', 'Please enter your email address.'); return; }
+    if (!pass || pass.length < 6){ _showAuthErr('signup-error', 'Password must be at least 6 characters.'); return; }
+    var btn = document.getElementById('signup-btn');
+    if (btn) { btn.disabled = true; btn.querySelector('span').textContent = 'Creating account...'; }
+    createUserWithEmailAndPassword(auth, email.trim(), pass)
+      .then(function(cred) { return updateProfile(cred.user, { displayName: name.trim() }); })
+      .then(function() {
+        if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Create Account'; }
+      })
+      .catch(function(err) {
+        if (btn) { btn.disabled = false; btn.querySelector('span').textContent = 'Create Account'; }
+        var msgs = {
+          'auth/email-already-in-use': 'An account already exists with this email.',
+          'auth/invalid-email':        'Invalid email address.',
+          'auth/weak-password':        'Password is too weak. Use at least 6 characters.'
+        };
+        _showAuthErr('signup-error', msgs[err.code] || 'Sign up failed: ' + err.message);
+      });
+  };
+
+  window.doReset = function() {
+    var email = (document.getElementById('reset-email') || {}).value;
+    if (!email || !email.trim()) { _showAuthErr('reset-error', 'Please enter your email address.'); return; }
+    sendPasswordResetEmail(auth, email.trim())
+      .then(function() {
+        var s = document.getElementById('reset-success');
+        if (s) { s.textContent = '✓ Reset email sent! Check your inbox.'; s.classList.add('show'); }
+      })
+      .catch(function(err) { _showAuthErr('reset-error', 'Could not send reset email: ' + err.message); });
+  };
+
+  window.doSignOut = function() {
+    if (!confirm('Sign out of Arnorex ESIA Pro?')) return;
+    // Clear app state before signing out
+    if (typeof window._clearAppState === 'function') window._clearAppState();
+    signOut(auth).then(function() {
+      if (typeof window.toast === 'function') window.toast('Signed out. See you next time!');
+    });
+  };
+
+  window.switchAuthTab = function(tab) {
+    ['login','signup','reset'].forEach(function(t) {
+      var f = document.getElementById('form-' + t);
+      if (f) f.style.display = (t === tab) ? 'flex' : 'none';
+    });
+    document.querySelectorAll('.auth-tab').forEach(function(el) { el.classList.remove('active'); });
+    var tabEl = document.getElementById('tab-' + tab);
+    if (tabEl) tabEl.classList.add('active');
+    document.querySelectorAll('.auth-error, .auth-success').forEach(function(el) {
+      el.classList.remove('show'); el.textContent = '';
+    });
+  };
+
+  function _showAuthErr(elId, msg) {
+    var el = document.getElementById(elId);
+    if (el) { el.textContent = msg; el.classList.add('show'); }
+  }
 
   console.log('Arnorex Cloud Ready 🦾');
 </script>
@@ -1575,95 +1683,19 @@ var SMART = {
   'Other':['General construction disturbance','Land use change and displacement','Biodiversity habitat disturbance','Worker health and safety risk','Community consultation required','Employment opportunity (positive)']
 };
 
+
 // ══════════════════════════════════
-//  AUTH FUNCTIONS
+//  AUTH FUNCTIONS — defined in Firebase module script above
+//  window.doLogin, window.doSignup, window.doReset,
+//  window.doSignOut, window.switchAuthTab are all on window.*
 // ══════════════════════════════════
 
-function switchAuthTab(tab) {
-  ['login','signup','reset'].forEach(function(t) {
-    document.getElementById('form-'+t).style.display = t===tab ? 'flex' : 'none';
-  });
-  document.querySelectorAll('.auth-tab').forEach(function(el){ el.classList.remove('active'); });
-  var tabEl = document.getElementById('tab-' + tab);
-  if (tabEl) tabEl.classList.add('active');
-  // Clear errors
-  document.querySelectorAll('.auth-error').forEach(function(el){ el.classList.remove('show'); el.textContent=''; });
-}
-
-function showAuthError(formId, msg) {
-  var el = document.getElementById(formId + '-error');
-  if (el) { el.textContent = msg; el.classList.add('show'); }
-}
-
-function doLogin() {
-  var email = document.getElementById('login-email').value.trim();
-  var pass  = document.getElementById('login-pass').value;
-  if (!email || !pass) { showAuthError('login','Please enter your email and password.'); return; }
-  var btn = document.querySelector('#form-login .auth-submit');
-  btn.textContent = 'Signing in...'; btn.disabled = true;
-  window._fb.signInWithEmailAndPassword(window._fb.auth, email, pass)
-    .then(function() {
-      btn.textContent = 'Sign In to Arnorex'; btn.disabled = false;
-    })
-    .catch(function(err) {
-      btn.textContent = 'Sign In to Arnorex'; btn.disabled = false;
-      var msg = err.code === 'auth/wrong-password' ? 'Incorrect password.' :
-                err.code === 'auth/user-not-found' ? 'No account found with this email.' :
-                err.code === 'auth/invalid-email' ? 'Invalid email address.' :
-                err.code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.' :
-                'Sign in failed: ' + err.message;
-      showAuthError('login', msg);
-    });
-}
-
-function doSignup() {
-  var name  = document.getElementById('signup-name').value.trim();
-  var email = document.getElementById('signup-email').value.trim();
-  var pass  = document.getElementById('signup-pass').value;
-  if (!name)  { showAuthError('signup','Please enter your full name.'); return; }
-  if (!email) { showAuthError('signup','Please enter your email address.'); return; }
-  if (pass.length < 6) { showAuthError('signup','Password must be at least 6 characters.'); return; }
-  var btn = document.querySelector('#form-signup .auth-submit');
-  btn.textContent = 'Creating account...'; btn.disabled = true;
-  window._fb.createUserWithEmailAndPassword(window._fb.auth, email, pass)
-    .then(function(cred) {
-      return window._fb.updateProfile(cred.user, { displayName: name });
-    })
-    .then(function() {
-      btn.textContent = 'Create Account'; btn.disabled = false;
-      // onAuthStateChanged will handle the rest
-    })
-    .catch(function(err) {
-      btn.textContent = 'Create Account'; btn.disabled = false;
-      var msg = err.code === 'auth/email-already-in-use' ? 'An account already exists with this email.' :
-                err.code === 'auth/invalid-email' ? 'Invalid email address.' :
-                err.code === 'auth/weak-password' ? 'Password is too weak.' :
-                'Sign up failed: ' + err.message;
-      showAuthError('signup', msg);
-    });
-}
-
-function doReset() {
-  var email = document.getElementById('reset-email').value.trim();
-  if (!email) { showAuthError('reset','Please enter your email address.'); return; }
-  window._fb.sendPasswordResetEmail(window._fb.auth, email)
-    .then(function() {
-      var succ = document.getElementById('reset-success');
-      succ.textContent = '✓ Reset email sent! Check your inbox.';
-      succ.classList.add('show');
-    })
-    .catch(function(err) { showAuthError('reset','Could not send reset email: ' + err.message); });
-}
-
-function doSignOut() {
-  if (!confirm('Sign out of Arnorex ESIA Pro?')) return;
-  // Clear local state on sign out
-  PROJECTS = []; ACTIVE_PROJ = null; DONE = {}; PROJ_TYPE = '';
+// Clear app state on sign-out (called from Firebase module)
+window._clearAppState = function() {
+  PROJECTS = []; ACTIVE_PROJ = null; DONE = {}; PROJ_TYPE = "";
   window.currentProjectId = null;
-  window._fb.signOut(window._fb.auth).then(function() {
-    toast('Signed out. See you next time!');
-  });
-}
+};
+
 
 // ══════════════════════════════════
 //  FIRESTORE — CLOUD SAVE / LOAD
@@ -3455,4 +3487,4 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 </body>
-              </html>
+  </html>
